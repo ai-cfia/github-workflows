@@ -1,0 +1,31 @@
+name: Reusable Docker container deployment to Google Cloud Run
+
+on:
+  workflow_call:
+    inputs:
+      container-name:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.LOUIS_GAR_JSON_KEY }}
+      - name: Deploy to Cloud Run
+        # You may pin to the exact commit or the version.
+        # uses: google-github-actions/deploy-cloudrun@e62f655d5754bec48078a72edc015367b01ee97b
+        uses: google-github-actions/deploy-cloudrun@v1.0.2
+        with:
+          # Name of the container image to deploy (e.g. gcr.io/cloudrun/hello:latest). Required if not using a service YAML.
+          image: ${{ secrets.LOUIS_REGISTRY }}/${{inputs.container-name}}:${{inputs.tag}}
+          # ID of the service or fully qualified identifier for the service. Required if not using a service YAML.
+          service: ${{inputs.container-name}}
+          # Region in which the resource can be found.
+          region: ${{ secrets.GCP_CLOUDRUN_REGION }}

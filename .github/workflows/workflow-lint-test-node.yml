@@ -1,0 +1,25 @@
+name: Reusable lint and test workflow for Node (React) projects
+
+on:
+    workflow_call:
+
+jobs:
+    lint-test:
+      runs-on: ubuntu-latest
+      environment: experimental
+      steps:
+        - uses: actions/checkout@v3
+        - name: Install Node.js
+          uses: actions/setup-node@v3
+          with:
+            cache: npm
+            node-version-file: "package.json"
+        - name: install npm
+          run: npm install -g npm@9.8.1
+        - name: install dependencies
+          run: npm install
+        - name: Run ESLint
+          run: npm run lint
+        - name: Run tests
+          run: npm test
+  
