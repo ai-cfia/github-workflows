@@ -35,7 +35,7 @@ jobs:
       run: |
         python -m unittest discover -s tests
       env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         LOUIS_DSN: ${{ secrets.LOUIS_DSN }}
         LOUIS_SCHEMA: ${{ secrets.LOUIS_SCHEMA }}
-        OPENAPI_API_KEY: ${{ secrets.OPENAPI_API_KEY }}
         AZURE_OPENAI_SERVICE: ${{ secrets.AZURE_OPENAI_SERVICE }}
