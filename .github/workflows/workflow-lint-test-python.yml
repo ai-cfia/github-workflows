@@ -25,9 +25,17 @@ jobs:
         ruff --format=github --select=E9,F63,F7,F82 --target-version=py311 .
         # default set of ruff rules with GitHub Annotations
         ruff --format=github --target-version=py311 .
-    - name: Test with pytest
+    # - name: Test with pytest
+    #   run: |
+    #     pytest
+    #   env:
+    #     LOUIS_DSN: ${{ secrets.LOUIS_DSN }}
+    #     LOUIS_SCHEMA: ${{ secrets.LOUIS_SCHEMA }}
+    - name: Test with unittest
       run: |
-        pytest
+        python -m unittest discover -s tests
       env:
         LOUIS_DSN: ${{ secrets.LOUIS_DSN }}
         LOUIS_SCHEMA: ${{ secrets.LOUIS_SCHEMA }}
+        OPENAPI_API_KEY: ${{ secrets.OPENAPI_API_KEY }}
+        AZURE_OPENAI_SERVICE: ${{ secrets.AZURE_OPENAI_SERVICE }}
