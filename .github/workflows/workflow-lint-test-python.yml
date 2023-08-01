@@ -1,6 +1,7 @@
 name: Python package
 
-on: [push]
+on:
+    workflow_call:
 
 jobs:
   build:
