@@ -35,7 +35,7 @@ jobs:
           context: .
           push: true
           build-args: REACT_APP_BACKEND_URL=${{ secrets.REACT_APP_BACKEND_URL }}
-          tags: ${{ secrets.LOUIS_REGISTRY }}/${{inputs.container-name}}:${{inputs.tag}}
+          tags: ${{ secrets.GCP_CLOUDRUN_REGION }}-docker.pkg.dev/${{ secrets.LOUIS_REGISTRY }}/${{inputs.container-name}}:${{inputs.tag}}          
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Move cache

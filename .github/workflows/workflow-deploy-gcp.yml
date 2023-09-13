@@ -24,7 +24,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v1.0.2
         with:
           # Name of the container image to deploy (e.g. gcr.io/cloudrun/hello:latest). Required if not using a service YAML.
-          image: ${{ secrets.LOUIS_REGISTRY }}/${{inputs.container-name}}:${{inputs.tag}}
+          image: ${{ secrets.GCP_CLOUDRUN_REGION }}-docker.pkg.dev/${{ secrets.LOUIS_REGISTRY }}/${{inputs.container-name}}:${{inputs.tag}}
           # ID of the service or fully qualified identifier for the service. Required if not using a service YAML.
           service: ${{inputs.container-name}}
           # Region in which the resource can be found.
