@@ -46,7 +46,7 @@ The provided GitHub workflows are designed to be reusable across the CFIA's open
 
 #### Example of Calling a Workflow
 
-To use these workflows in your project, you can call them using `workflow_run` or `workflow_call` (depending on your GitHub Actions version). Here’s a basic example of how to call a workflow:
+To use these workflows in your project, you can call them using `workflow_dispatch`. Here’s a basic example of how to call a workflow:
 
 ```yaml
 name: My Workflow
