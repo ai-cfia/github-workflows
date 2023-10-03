@@ -60,3 +60,6 @@ jobs:
     uses: [Owner/Repo/.github/workflows/WORKFLOW_FILE_NAME.yaml@branch]
     secrets:
       secrets: inherit
+```
+
+You can find a working example on a deployment to GCP [here](https://github.com/ai-cfia/fastapi-example/blob/main/.github/workflows/gcp-deployment.yml).
