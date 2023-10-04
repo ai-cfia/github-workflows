@@ -16,7 +16,7 @@ jobs:
 
     - name: Check for file
       run: |
-        IFS=',' read -ra FILE_ARRAY <<< "${{ github.event.inputs.files }}"
+        IFS=',' read -ra FILE_ARRAY <<< "${{ inputs.files }}"
         for file in "${FILE_ARRAY[@]}"; do
           if [[ -f "$file" ]]; then
             echo "$file exists."
