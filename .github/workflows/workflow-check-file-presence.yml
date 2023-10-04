@@ -17,6 +17,7 @@ jobs:
     - name: Check for file
       run: |
         IFS=',' read -ra FILE_ARRAY <<< "${{ inputs.files }}"
+        echo $file
         for file in "${FILE_ARRAY[@]}"; do
           if [[ -f "$file" ]]; then
             echo "$file exists."
