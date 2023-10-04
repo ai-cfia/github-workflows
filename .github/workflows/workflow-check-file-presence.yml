@@ -12,10 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        file: ["test_documentation.md"]
+        file: ${{fromJson(github.event.inputs.files)}}
     steps:
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      
+    - name: Echo Input
+      run: |
+        echo "Files: ${{ github.event.inputs.files }}"
+      shell: bash
 
     - name: Check for file
       run: |
