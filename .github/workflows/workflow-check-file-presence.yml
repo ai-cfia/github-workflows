@@ -1,0 +1,28 @@
+name: Validate file presence
+
+on:
+  workflow_call:
+    inputs:
+      files:
+        required: true
+        type: string
+
+jobs:
+  check-files:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{fromJson(github.event.inputs.files)}}
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Check for file
+      run: |
+        if [[ -f "${{ matrix.file }}" ]]; then
+          echo "${{ matrix.file }} exists."
+        else
+          echo "Error: ${{ matrix.file }} does not exist!" >&2
+          exit 1
+        fi
+      shell: bash
