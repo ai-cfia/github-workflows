@@ -19,10 +19,8 @@ jobs:
         missing_flag=false
         IFS=',' read -ra FILE_ARRAY <<< "${{ inputs.files }}"
         for file in "${FILE_ARRAY[@]}"; do
-          if [[ -f "$file" ]]; then
-            echo "$file exists."
-          else
-            echo "Error: $file does not exist!" >&2
+          if [[ ! -f "$file" ]]; then
+            echo "$file does not exist" >&2
             missing_flag=true
           fi
         done
