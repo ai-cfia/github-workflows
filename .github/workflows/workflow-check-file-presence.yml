@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        file: ${{fromJson(github.event.inputs.files)}}
+        file: ["test_documentation.md"]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
