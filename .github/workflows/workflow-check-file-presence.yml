@@ -16,14 +16,18 @@ jobs:
 
     - name: Check for file
       run: |
+        missing_flag=false
         IFS=',' read -ra FILE_ARRAY <<< "${{ inputs.files }}"
-        echo $file
         for file in "${FILE_ARRAY[@]}"; do
           if [[ -f "$file" ]]; then
             echo "$file exists."
           else
             echo "Error: $file does not exist!" >&2
-            exit 1
+            missing_flag=true
           fi
+        done
+        if [[ "$missing_flag" == true ]]; then
+          exit 1
+        fi
         done
       shell: bash
