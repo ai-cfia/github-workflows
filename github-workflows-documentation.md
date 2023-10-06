@@ -36,7 +36,7 @@ The provided GitHub workflows are designed to be reusable across the CFIA's open
    - **Usage:** Call this workflow in your Node.js projects.
    - **Note:** Ensure that your project has the necessary scripts for linting and testing in the `package.json` file.
 
-4. **Python Package:**
+4. **Reusable Lint and Test Workflow for Python Projects::**
    - **Purpose:** Lint and test Python packages.
    - **Usage:** Call this workflow in your Python projects.
    - **Required Secrets:**
