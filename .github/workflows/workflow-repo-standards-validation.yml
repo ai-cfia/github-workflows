@@ -1,0 +1,120 @@
+name: Reusable workflow to validate organization standards
+
+on:
+  workflow_call:
+
+jobs:
+  validate-name:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check repository name
+      run: |
+        repo_name="${{ github.repository }}"
+        lower_repo_name="${repo_name,,}"
+        
+        if [[ "$repo_name" != "$lower_repo_name" ]]; then
+          echo "The repository name '$repo_name' should contain only lowercase letters." >&2
+          exit 1
+        elif [[ "$repo_name" == *"_"* ]]; then
+          echo "The repository name '$repo_name' should contain dashs ( - ) and not underscores ( _ )." >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Check repository visibility
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        repo_info=$(curl -H "Authorization: token $GITHUB_TOKEN" -s "https://api.github.com/repos/${{ github.repository }}")
+        repo_visibility=$(echo $repo_info | jq -r .private)
+        
+        if [[ "$repo_visibility" == "true" ]]; then
+          echo "The repository '${{ github.repository }}' is private and needs to be public". >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Check repository description
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        repo_info=$(curl -H "Authorization: token $GITHUB_TOKEN" -s "https://api.github.com/repos/${{ github.repository }}")
+        repo_description=$(echo $repo_info | jq -r .description)
+        
+        if [[ "$repo_description" == "null" || -z "$repo_description" ]]; then
+          echo "The repository does not have a description, please add one." >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Check branch protection
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        protection=$(curl -H "Authorization: token $GITHUB_TOKEN" -s "https://api.github.com/repos/${{ github.repository }}/branches/main/protection")
+        message=$(echo $protection | jq -r .message)
+
+        echo $protection | jq -r .message
+        
+        if [[ "$message" == "Branch not protected" ]]; then
+          echo "Error: The main branch is not protected!" >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Check for README.md
+      run: |
+        FILE="README.md"
+        if [[ ! -f "$FILE" ]]; then
+          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Check for LICENSE file
+      run: |
+        FILE="LICENSE"
+        if [[ ! -f "$FILE" ]]; then
+          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Check for test_documentation.md
+      run: |
+        FILE="test_documentation.md"
+        if [[ ! -f "$FILE" ]]; then
+          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Check for manual_testing_plan.md
+      run: |
+        FILE="manual_testing_plan.md"
+        if [[ ! -f "$FILE" ]]; then
+          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
+
+    - name: Check for setup_and_installation_guide.md
+      run: |
+        FILE="setup_and_installation_guide.md"
+        if [[ ! -f "$FILE" ]]; then
+          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
+          exit 1
+        fi
+      if: always()
+      shell: bash
