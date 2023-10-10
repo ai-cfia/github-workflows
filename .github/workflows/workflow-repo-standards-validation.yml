@@ -8,113 +8,113 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check repository name
-      run: |
-        repo_name="${{ github.repository }}"
-        lower_repo_name="${repo_name,,}"
-        
-        if [[ "$repo_name" != "$lower_repo_name" ]]; then
-          echo "The repository name '$repo_name' should contain only lowercase letters." >&2
-          exit 1
-        elif [[ "$repo_name" == *"_"* ]]; then
-          echo "The repository name '$repo_name' should contain dashs ( - ) and not underscores ( _ )." >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { repo } = context.repo;
+
+          if (repo.includes('_')) {
+            core.setFailed("Repository name contains underscores (_). Please remove them and use dashes (-) instead.");
+          }
 
     - name: Check repository visibility
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        repo_info=$(curl -H "Authorization: token $GITHUB_TOKEN" -s "https://api.github.com/repos/${{ github.repository }}")
-        repo_visibility=$(echo $repo_info | jq -r .private)
-        
-        if [[ "$repo_visibility" == "true" ]]; then
-          echo "The repository '${{ github.repository }}' is private and needs to be public". >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner,repo } = context.repo;
+          const repoDetails = await github.rest.repos.get({ owner,repo })
+
+          if (repoDetails.data.private){
+            core.setFailed("Repository is private, please make it public");
+          }
+      if: always() # Run step even if previous steps fail.
+
+
 
     - name: Check repository description
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        repo_info=$(curl -H "Authorization: token $GITHUB_TOKEN" -s "https://api.github.com/repos/${{ github.repository }}")
-        repo_description=$(echo $repo_info | jq -r .description)
-        
-        if [[ "$repo_description" == "null" || -z "$repo_description" ]]; then
-          echo "The repository does not have a description, please add one." >&2
-          exit 1
-        fi
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const repoDetails = await github.rest.repos.get({ owner, repo });
+
+          if (!repoDetails.data.description) {
+            core.setFailed("The repository does not have a description, please add one.");
+          }
       if: always()
-      shell: bash
 
     - name: Check branch protection
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        protection=$(curl -H "Authorization: token $GITHUB_TOKEN" -s "https://api.github.com/repos/${{ github.repository }}/branches/main/protection")
-        message=$(echo $protection | jq -r .message)
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.SECRET_PAT }}
+        script: |
+          const { owner, repo } = context.repo;
+          let protection;
 
-        echo $protection | jq -r .message
-        
-        if [[ "$message" == "Branch not protected" ]]; then
-          echo "Error: The main branch is not protected!" >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
+          try {
+            protection = await github.rest.repos.getBranchProtection({
+              owner,
+              repo,
+              branch: 'main'
+            });
+          } catch (error) {
+            core.setFailed(`An error occurred: ${error.message}`);
+            return;
+          }
 
-    - name: Checkout code
-      uses: actions/checkout@v3
+          if (!protection || !protection.data) {
+            core.setFailed("The main branch is not protected, please protect it.");
+          }
+      if: always() # Run step even if previous steps fail.
 
-    - name: Check for README.md
-      run: |
-        FILE="README.md"
-        if [[ ! -f "$FILE" ]]; then
-          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
+    - name: Check repository license
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const repoDetails = await github.rest.repos.get({ owner, repo });
 
-    - name: Check for LICENSE file
-      run: |
-        FILE="LICENSE"
-        if [[ ! -f "$FILE" ]]; then
-          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
+          if (!repoDetails.data.license) {
+            core.setFailed("The repository does not have a license, please add one.");
+          }
+      if: always() # Run step even if previous steps fail.
 
-    - name: Check for test_documentation.md
-      run: |
-        FILE="test_documentation.md"
-        if [[ ! -f "$FILE" ]]; then
-          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
+    - name: Check presence of README
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          try {
+            await github.rest.repos.getContent({
+              owner,
+              repo,
+              path: 'README.md'
+            });
+          } catch (error) {
+            if (error.status === 404) {
+              core.setFailed("The repository does not have a README.md file, please add one.");
+            } else {
+              core.setFailed(`An error occurred while checking for README: ${error.message}`);
+            }
+          }
+      if: always() # Run step even if previous steps fail.
 
-    - name: Check for manual_testing_plan.md
-      run: |
-        FILE="manual_testing_plan.md"
-        if [[ ! -f "$FILE" ]]; then
-          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
-
-    - name: Check for setup_and_installation_guide.md
-      run: |
-        FILE="setup_and_installation_guide.md"
-        if [[ ! -f "$FILE" ]]; then
-          echo "Error: '$FILE' does not exist in the repository, please create one." >&2
-          exit 1
-        fi
-      if: always()
-      shell: bash
+    - name: Check presence of TESTING.md
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          try {
+            await github.rest.repos.getContent({
+              owner,
+              repo,
+              path: 'TESTING.md'
+            });
+          } catch (error) {
+            if (error.status === 404) {
+              core.setFailed("The repository does not have a TESTING.md file, please add one.");
+            } else {
+              core.setFailed(`An error occurred while checking for TESTING.md: ${error.message}`);
+            }
+          }
+      if: always() # Run step even if previous steps fail.
