@@ -46,7 +46,6 @@ jobs:
     - name: Check branch protection
       uses: actions/github-script@v5
       with:
-        github-token: ${{ secrets.SECRET_PAT }}
         script: |
           const { owner, repo } = context.repo;
           let protection;
