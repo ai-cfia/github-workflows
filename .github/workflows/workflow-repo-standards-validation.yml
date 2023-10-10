@@ -49,21 +49,19 @@ jobs:
         github-token: ${{ secrets.AILAB_OCTOKIT_ACCESS_TOKEN }}
         script: |
           const { owner, repo } = context.repo;
-          let protection;
-
           try {
-            protection = await github.rest.repos.getBranchProtection({
+            const protection = await github.rest.repos.getBranchProtection({
               owner,
               repo,
               branch: 'main'
             });
           } catch (error) {
-            core.setFailed(`An error occurred: ${error.message}`);
+            if (error.message.includes("Branch not protected")) {
+              core.setFailed("The main branch is not protected, please protect it.");
+            } else {
+              core.setFailed(`An error occurred: ${error.message}`);
+            }
             return;
-          }
-
-          if (!protection || !protection.data) {
-            core.setFailed("The main branch is not protected, please protect it.");
           }
       if: always() # Run step even if previous steps fail.
 
