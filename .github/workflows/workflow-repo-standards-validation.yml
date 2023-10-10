@@ -6,8 +6,6 @@ on:
 jobs:
   validate-name:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
     - name: Check repository name
       uses: actions/github-script@v5
@@ -48,6 +46,7 @@ jobs:
     - name: Check branch protection
       uses: actions/github-script@v5
       with:
+        github-token: ${{ secrets.AILAB_OCTOKIT_ACCESS_TOKEN }}
         script: |
           const { owner, repo } = context.repo;
           let protection;
