@@ -62,7 +62,7 @@ on:
 
 jobs:
   my_job:
-    uses: [Owner/Repo/.github/workflows/WORKFLOW_FILE_NAME.yaml@branch]
+    uses: $OWNER/$REPO/.github/workflows/$WORKFLOW_FILE_NAME.yaml@$BRANCH
     secrets: inherit
 ```
 
