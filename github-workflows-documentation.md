@@ -47,9 +47,6 @@ The provided GitHub workflows are designed to be reusable across the CFIA's open
 5. **Reusable Workflow for Standardization Validation**
    - **Purpose:** Validate the organization's standards across projects.
    - **Usage:** Call this workflow while making sure the necessary secrets are inherited for successful execution.
-
-
-
 #### Example of Calling a Workflow
 
 To use these workflows in your project, you can call them using `workflow_dispatch`. Here’s a basic example of how to call a workflow:
