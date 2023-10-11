@@ -44,6 +44,9 @@ The provided GitHub workflows are designed to be reusable across the CFIA's open
      - `LOUIS_DSN` and `LOUIS_SCHEMA`: Database credentials (if utilized in tests).
      - `AZURE_OPENAI_SERVICE`: Azure OpenAI service credentials (if utilized).
 
+5. **Reusable Workflow for Standardization Validation**
+   - **Purpose:** Validate the organization's standards across projects.
+   - **Usage:** Call this workflow while making sure the necessary secrets are inherited for successful execution.
 #### Example of Calling a Workflow
 
 To use these workflows in your project, you can call them using `workflow_dispatch`. Here’s a basic example of how to call a workflow:
@@ -57,9 +60,8 @@ on:
 
 jobs:
   my_job:
-    uses: [Owner/Repo/.github/workflows/WORKFLOW_FILE_NAME.yaml@branch]
-    secrets:
-      secrets: inherit
+    uses: $OWNER/$REPO/.github/workflows/$WORKFLOW_FILE_NAME.yaml@$BRANCH
+    secrets: inherit
 ```
 
 You can find a working example on a deployment to GCP [here](https://github.com/ai-cfia/fastapi-example/blob/main/.github/workflows/gcp-deployment.yml).

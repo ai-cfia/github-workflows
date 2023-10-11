@@ -1,0 +1,116 @@
+name: Reusable workflow to validate organization standards
+
+on:
+  workflow_call:
+
+jobs:
+  validate-name:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check repository name
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { repo } = context.repo;
+
+          if (repo.includes('_')) {
+            core.setFailed("Repository name contains underscores (_). Please remove them and use dashes (-) instead.");
+          }
+
+    - name: Check repository visibility
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner,repo } = context.repo;
+          const repoDetails = await github.rest.repos.get({ owner,repo })
+
+          if (repoDetails.data.private){
+            core.setFailed("Repository is private, please make it public");
+          }
+      if: always() # Run step even if previous steps fail.
+
+    - name: Check repository description
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const repoDetails = await github.rest.repos.get({ owner, repo });
+
+          if (!repoDetails.data.description) {
+            core.setFailed("The repository does not have a description, please add one.");
+          }
+      if: always()
+
+    - name: Check branch protection
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.AILAB_OCTOKIT_ACCESS_TOKEN }}
+        script: |
+          const { owner, repo } = context.repo;
+          try {
+            const protection = await github.rest.repos.getBranchProtection({
+              owner,
+              repo,
+              branch: 'main'
+            });
+          } catch (error) {
+            if (error.message.includes("Branch not protected")) {
+              core.setFailed("The main branch is not protected, please protect it.");
+            } else {
+              core.setFailed(`An error occurred: ${error.message}`);
+            }
+            return;
+          }
+      if: always() # Run step even if previous steps fail.
+
+    - name: Check repository license
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const repoDetails = await github.rest.repos.get({ owner, repo });
+
+          if (!repoDetails.data.license) {
+            core.setFailed("The repository does not have a license, please add one.");
+          }
+      if: always() # Run step even if previous steps fail.
+
+    - name: Check presence of README
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          try {
+            await github.rest.repos.getContent({
+              owner,
+              repo,
+              path: 'README.md'
+            });
+          } catch (error) {
+            if (error.status === 404) {
+              core.setFailed("The repository does not have a README.md file, please add one.");
+            } else {
+              core.setFailed(`An error occurred while checking for README: ${error.message}`);
+            }
+          }
+      if: always() # Run step even if previous steps fail.
+
+    - name: Check presence of TESTING.md
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          try {
+            await github.rest.repos.getContent({
+              owner,
+              repo,
+              path: 'TESTING.md'
+            });
+          } catch (error) {
+            if (error.status === 404) {
+              core.setFailed("The repository does not have a TESTING.md file, please add one.");
+            } else {
+              core.setFailed(`An error occurred while checking for TESTING.md: ${error.message}`);
+            }
+          }
+      if: always() # Run step even if previous steps fail.
