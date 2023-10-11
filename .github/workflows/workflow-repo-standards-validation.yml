@@ -114,3 +114,70 @@ jobs:
             }
           }
       if: always() # Run step even if previous steps fail.
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name : Edit intake file
+      run: |
+        if [[ -f "intake.md" ]]; then
+          sed -i 's/\* \[ \] \[Configure repository to our own internal standards\]/\* \[x\] \[Configure repository to our own internal standards\]/' intake.md
+        else
+          echo "intake.md does not exist, this step will be skipped. Refer to rel-dev-doc repo for intake template"
+        fi
+
+    - name: Commit and push using Octokit
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.SECRET_PAT }}
+        script: |
+          const fs = require('fs');
+          const { owner, repo } = context.repo;
+          const path = "intake.md";
+          const message = "automatic update from workflow";
+
+          // Read the modified intake.md content
+          const modifiedContent = fs.readFileSync('./intake.md', 'utf-8');
+          const base64Content = Buffer.from(modifiedContent).toString('base64');
+
+          // Create the blob for the modified content
+          const blob = await github.rest.git.createBlob({
+            owner,
+            repo,
+            content: base64Content,
+            encoding: 'base64'
+          });
+
+          // Get the SHA for the current branch
+          const branch = await github.rest.repos.getBranch({ owner, repo, branch: context.ref.replace('refs/heads/', '') });
+          const branchSha = branch.data.commit.sha;
+
+          // Create a new tree
+          const tree = await github.rest.git.createTree({
+            owner,
+            repo,
+            base_tree: branchSha,
+            tree: [{
+              path: path,
+              mode: '100644',
+              type: 'blob',
+              sha: blob.data.sha
+            }]
+          });
+
+          // Create a new commit
+          const commit = await github.rest.git.createCommit({
+            owner,
+            repo,
+            message: message,
+            tree: tree.data.sha,
+            parents: [branchSha]
+          });
+
+          // Update the branch to point to the new commit
+          await github.rest.git.updateRef({
+            owner,
+            repo,
+            ref: 'heads/' + context.ref.replace('refs/heads/', ''),
+            sha: commit.data.sha
+          });
