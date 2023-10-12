@@ -1,0 +1,30 @@
+name: Reusable Docker container deployment to GitHub-pages
+
+on:
+  workflow_call:
+    inputs:
+      cache-directory:
+        required: true
+        type: string
+      working-directory:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: yarn
+        cache-dependency-path: '${{ inputs.cache-directory }}'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      working-directory: ${{ inputs.working-directory }}
