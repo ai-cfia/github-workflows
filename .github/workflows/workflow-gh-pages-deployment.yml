@@ -9,9 +9,6 @@ on:
         publish_dir:
           required: true
           type: string
-        react_app_backend_url:
-          required: true
-          type: string
 
 jobs:
   build-and-deploy:
@@ -19,6 +16,7 @@ jobs:
     env:
       NODE_VERSION: ${{ inputs.node_version }}
       PUBLISH_DIR: ${{ inputs.publish_dir }}
+      REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
 
     steps:
     - name: Checkout Repository
@@ -33,8 +31,6 @@ jobs:
 
     - name: Build
       run: npm run build
-      env:
-        REACT_APP_BACKEND_URL: ${{ inputs.react_app_backend_url }}
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
