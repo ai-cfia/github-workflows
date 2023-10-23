@@ -1,0 +1,43 @@
+name: Reusable Build and Deploy to GitHub Pages
+
+on:
+    workflow_call:
+      inputs:
+        node_version:
+          required: true
+          type: string
+        publish_dir:
+          required: true
+          type: string
+        react_app_backend_url:
+          required: true
+          type: string
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: ${{ inputs.node_version }}
+      PUBLISH_DIR: ${{ inputs.publish_dir }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Build
+      run: npm run build
+      env:
+        REACT_APP_BACKEND_URL: ${{ inputs.react_app_backend_url }}
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ${{ env.PUBLISH_DIR }}
