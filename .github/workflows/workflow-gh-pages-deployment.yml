@@ -44,9 +44,6 @@ jobs:
       run: npm install
       working-directory: ${{ env.WORKING_DIR }}
 
-    - name: List files
-      run: ls -al ${{ env.WORKING_DIR }}
-
     - name: Build
       run: npm run build
       working-directory: ${{ env.WORKING_DIR }}
