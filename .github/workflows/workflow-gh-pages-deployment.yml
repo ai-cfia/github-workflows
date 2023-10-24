@@ -3,19 +3,28 @@ name: Reusable Build and Deploy to GitHub Pages
 on:
     workflow_call:
       inputs:
-        node_version:
+        node-version:
           required: true
           type: string
-        publish_dir:
+        publish-dir:
           required: true
           type: string
+        cache-dependency-path:
+          required: true
+          type: string
+        working-dir:
+          required: false
+          type: string
+          default: '.'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: ${{ inputs.node_version }}
-      PUBLISH_DIR: ${{ inputs.publish_dir }}
+      WORKING_DIR: ${{ inputs.working-dir }}
+      NODE_VERSION: ${{ inputs.node-version }}
+      PUBLISH_DIR: ${{ inputs.publish-dir }}
+      CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
       REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
 
     steps:
@@ -25,9 +34,14 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
+
 
     - name: Install Dependencies
       run: npm install
+      working-directory: ${{ env.WORKING_DIR }}
+
 
     - name: Build
       run: npm run build
