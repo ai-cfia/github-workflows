@@ -40,11 +40,12 @@ jobs:
         cache: npm
         cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
 
-
     - name: Install Dependencies
       run: npm install
       working-directory: ${{ env.WORKING_DIR }}
 
+    - name: List files
+      run: ls -al ${{ env.WORKING_DIR }}
 
     - name: Build
       run: npm run build
