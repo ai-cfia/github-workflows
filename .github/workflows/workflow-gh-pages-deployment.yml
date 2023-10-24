@@ -33,7 +33,7 @@ jobs:
       PUBLISH_DIR: ${{ inputs.publish-dir }}
       CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
       REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
-      PUBLISH_BRANCH: ${{ inputs.publish-dir }}
+      PUBLISH_BRANCH: ${{ inputs.publish-branch }}
 
     steps:
     - name: Checkout Repository
