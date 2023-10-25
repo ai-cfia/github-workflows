@@ -11,9 +11,9 @@ jobs:
       run: echo '{}' > empty-config.json
 
     - name: Checkout code
-    - uses: actions/checkout@master
+      uses: actions/checkout@master
 
     - name: Validating links
-    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
       with:
         config-file: './empty-config.json'
