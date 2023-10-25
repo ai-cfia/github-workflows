@@ -7,7 +7,13 @@ jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
+    - name: Create empty config file
+      run: echo '{}' > empty-config.json
+
+    - name: Checkout code
     - uses: actions/checkout@master
-    - run: npm install
-    - run: npx markdown-link-check . --no-config
+
+    - name: Validating links
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        config-file: './empty-config.json'
