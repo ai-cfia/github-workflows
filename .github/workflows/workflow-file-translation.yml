@@ -2,108 +2,13 @@ on:
   workflow_call:
 
 jobs:
-  process:
+  gpt_translate:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-    env:
-      COMMIT_USER: ${{ github.event.pusher.name }}
 
     steps:
-      - name: Checkout repository
-        if: github.actor != 'github-actions[bot]'
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+
+      - name: Run GPT Translate
+        uses: 3ru/gpt-translate@master
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Read markdown files title
-        id: read-markdown-title
-        run: |
-          file_path=$(find adr -type f -name '*.md')
-          file_name=$(basename "$file_path")
-          adr_number=$(echo $file_name | cut -c1-3)
-
-          echo "::set-output name=file_name::$file_name"
-          echo "::set-output name=adr_number::$adr_number"
-
-      - name: Read markdown file content
-        id: read-markdown-file
-        run: |
-          content=$(cat adr/*.md)
-          content="${content//'%'/'%25'}"
-          content="${content//$'\n'/'%0A'}"
-          content="${content//$'\r'/'%0D'}"
-          echo "::set-output name=content::$content"
-
-      - name: OpenAI ChatGPT Action
-        id: gpt-response
-        uses: cahaseler/openai-api@v1.0.0
-        with:
-          apiKey: ${{ secrets.OPENAI_API_KEY }}
-          prompt: 'Please translate the following English text to French, preserving all markdown formatting and structure exactly as it is. It is very important to send back only the markdown code as the response will be directly appended to the file:'
-          input: ${{ steps.read-markdown-file.outputs.content }}
-          model: 'gpt-4'
-          temperature: 1
-
-      - name: Print Translated Content
-        run: |
-          echo "Translated Content: ${{ steps.gpt-response.outputs.completion }}"
-
-      - name: Set up Git
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-      - name: Create issue template file
-        uses: 1arp/create-a-file-action@0.3
-        with:
-          path: '.'
-          file: issues_template.md
-          content: |
-            ---
-            title: "Translate {{ steps.read-markdown-title.outputs.file_name }} to French"
-            labels: "automatization"
-            ---
-            This issue was automatically created by github-actions bot, a new translated file for {{ steps.read-markdown-title.outputs.file_name }} will be created and commited and a new PR will be created to review the file.
-
-      - name: Create issue
-        uses: JasonEtco/create-an-issue@v2
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          filename: issues_template.md
-
-      - name: Get issue number
-        id: issue-number
-        uses: micalevisk/last-issue-action@v2
-        with:
-            state: open
-            labels: automatization
-
-      - name: Checkout New Branch and Append Response to README
-        run: |
-          git checkout -b ${{steps.issue-number.outputs.issue-number}}-translate-adr-${{ steps.read-markdown-title.outputs.adr_number }}
-          cd adr
-          echo "${{ steps.gpt-response.outputs.completion }}" >> FR_${{ steps.read-markdown-title.outputs.file_name }}.md
-          git add FR_${{ steps.read-markdown-title.outputs.file_name }}.md
-          git commit -m "Add FR_${{ steps.read-markdown-title.outputs.file_name }}.md"
-          git push origin ${{steps.issue-number.outputs.issue-number}}-translate-adr-${{ steps.read-markdown-title.outputs.adr_number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Add FR_${{ steps.read-markdown-title.outputs.file_name }}
-          committer: GitHub <noreply@github.com>
-          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-          signoff: false
-          branch: ${{steps.issue-number.outputs.issue-number}}/translate-adr-${{ steps.read-markdown-title.outputs.adr_number }}
-          delete-branch: true
-          title: 'Fixes #${{ steps.issue-number.outputs.issue-number }}: Translate ${{ steps.read-markdown-title.outputs.file_name }} to French '
-          body: 'This PR includes the translated file mentionned in issue #${{ steps.issue-number.outputs.issue-number }}.'
-          draft: false
-          reviewers: ${{ env.COMMIT_USER }}
+          apikey: ${{ secrets.OPENAI_API_KEY }}
