@@ -32,7 +32,6 @@ jobs:
       NODE_VERSION: ${{ inputs.node-version }}
       PUBLISH_DIR: ${{ inputs.publish-dir }}
       CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
-      REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
       PUBLISH_BRANCH: ${{ inputs.publish-branch }}
 
     steps:
