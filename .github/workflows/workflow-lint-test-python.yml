@@ -33,3 +33,4 @@ jobs:
         LOUIS_DSN: ${{ secrets.LOUIS_DSN }}
         LOUIS_SCHEMA: ${{ secrets.LOUIS_SCHEMA }}
         AZURE_OPENAI_SERVICE: ${{ secrets.AZURE_OPENAI_SERVICE }}
+        

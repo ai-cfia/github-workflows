@@ -30,3 +30,4 @@ jobs:
           # Region in which the resource can be found.
           region: ${{ secrets.GCP_CLOUDRUN_REGION }}
           env_vars: ${{ secrets.ENV }}
+          
