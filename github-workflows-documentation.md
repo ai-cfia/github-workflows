@@ -47,6 +47,14 @@ The provided GitHub workflows are designed to be reusable across the CFIA's open
 5. **Reusable Workflow for Standardization Validation**
    - **Purpose:** Validate the organization's standards across projects.
    - **Usage:** Call this workflow while making sure the necessary secrets are inherited for successful execution.
+
+6. **Check Markdown Links Workflow:**
+   - **Purpose:** This workflow checks for broken links in Markdown files.
+   - **Usage:** This workflow can be triggered via `workflow_call` from other workflows, it doesn't require any input.
+   - **Workflow Steps:**
+     - Checks out the code from the repository.
+     - Runs a link validation on all Markdown files using the [github-action-markdown-link-check](https://github.com/marketplace/actions/markdown-link-check) action.
+
 #### Example of Calling a Workflow
 
 To use these workflows in your project, you can call them using `workflow_dispatch`. Here’s a basic example of how to call a workflow:
