@@ -3,17 +3,13 @@ name: Reusable workflow to validate EOF (Enf of File) new line presence
 on:
   workflow_call:
 
-
 jobs:
-    my-workflow:
-        name: Example workflow using the Check EOL
-        runs-on: ubuntu-latest
-
-        steps:
-          - name: Checkout repository contents
-            uses: actions/checkout@v1
-
-          - name: Use this action to check EOL
-            uses: AODocs/check-eol@main
-            with:
-                path: .
+  linelint:
+    runs-on: ubuntu-latest
+    name: Check if all files end in newline
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Linelint
+        uses: fernandrone/linelint@master
+        id: linelint
