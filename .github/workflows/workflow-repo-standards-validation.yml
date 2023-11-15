@@ -39,7 +39,7 @@ jobs:
           if (!repoDetails.data.description) {
             core.setFailed("The repository does not have a description, please add one.");
           }
-      if: always()
+      if: always() # Run step even if previous steps fail.
 
     - name: Check branch protection
       uses: actions/github-script@v5
@@ -113,4 +113,9 @@ jobs:
               core.setFailed(`An error occurred while checking for TESTING.md: ${error.message}`);
             }
           }
+      if: always() # Run step even if previous steps fail.
+
+    - name: Check if all files end in newline
+      uses: fernandrone/linelint@master
+      id: linelint
       if: always() # Run step even if previous steps fail.
