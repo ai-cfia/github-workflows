@@ -3,23 +3,9 @@ name: Reusable Build and Deploy to GitHub Pages
 on:
     workflow_call:
       inputs:
-        node-version:
+        ENV:
           required: true
           type: string
-        publish-dir:
-          required: true
-          type: string
-        cache-dependency-path:
-          required: true
-          type: string
-        working-dir:
-          required: false
-          type: string
-          default: '.'
-        publish-branch:
-          required: false
-          type: string
-          default: 'gh-pages'
 
 permissions:
   contents: write
