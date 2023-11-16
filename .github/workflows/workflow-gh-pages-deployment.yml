@@ -14,26 +14,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: test
+        run: echo ${{ secrets.ENV }}
+    # - name: Checkout Repository
+    #   uses: actions/checkout@v3
 
-    - uses: actions/setup-node@v3
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: npm
-        cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
+    # - uses: actions/setup-node@v3
+    #   with:
+    #     node-version: ${{ env.NODE_VERSION }}
+    #     cache: npm
+    #     cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
 
-    - name: Install Dependencies
-      run: npm install
-      working-directory: ${{ env.WORKING_DIR }}
+    # - name: Install Dependencies
+    #   run: npm install
+    #   working-directory: ${{ env.WORKING_DIR }}
 
-    - name: Build
-      run: npm run build
-      working-directory: ${{ env.WORKING_DIR }}
+    # - name: Build
+    #   run: npm run build
+    #   working-directory: ${{ env.WORKING_DIR }}
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ${{ env.PUBLISH_DIR }}
-        publish_branch: ${{ env.PUBLISH_BRANCH }}
+    # - name: Deploy to GitHub Pages
+    #   uses: peaceiris/actions-gh-pages@v3
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     publish_dir: ${{ env.PUBLISH_DIR }}
+    #     publish_branch: ${{ env.PUBLISH_BRANCH }}
