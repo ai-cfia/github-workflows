@@ -2,6 +2,9 @@ name: Reusable Build and Deploy to GitHub Pages
 
 on:
     workflow_call:
+      secrets:
+        ENV:
+          required: false
 
 permissions:
   contents: write
