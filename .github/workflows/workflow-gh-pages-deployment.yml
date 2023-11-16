@@ -2,10 +2,6 @@ name: Reusable Build and Deploy to GitHub Pages
 
 on:
     workflow_call:
-      inputs:
-        ENV:
-          required: true
-          type: string
 
 permissions:
   contents: write
@@ -13,13 +9,6 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIR: ${{ inputs.working-dir }}
-      NODE_VERSION: ${{ inputs.node-version }}
-      PUBLISH_DIR: ${{ inputs.publish-dir }}
-      CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
-      REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
-      PUBLISH_BRANCH: ${{ inputs.publish-branch }}
 
     steps:
     - name: Checkout Repository
