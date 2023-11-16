@@ -3,7 +3,7 @@ name: Reusable Build and Deploy to GitHub Pages
 on:
     workflow_call:
       inputs:
-        ENV:
+        env_file:
           required: false
           type: string
 
@@ -13,10 +13,12 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      ENV: ${{ inputs.env_file }}
 
     steps:
       - name: test
-        run: echo ${{ secrets.ENV }}
+        run: echo ${{ env.ENV }}
     # - name: Checkout Repository
     #   uses: actions/checkout@v3
 
