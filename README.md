@@ -12,19 +12,19 @@ Each workflow has an associated documentation file that explains its purpose, us
 
 Here are the available workflows and their associated documentation:
 
-- [Reusable Docker Container Build](./workflow-build-container.md)
-- [Reusable Docker Container Deployment to Google Cloud Run](./workflow-deployment-gcr.md)
-- [Reusable Lint and Test Workflow for Node (React) Projects](./workflow-lint-test-node.md)
-- [Reusable Lint and Test Workflow for Python Projects](./workflow-lint-test-python.md)
-- [Reusable Workflow for Standardization Validation](./workflow-standardization-validation.md)
-- [Reusable Build and Deploy to GitHub Pages](./workflow-build-deploy-ghpages.md)
+- [Reusable Docker Container Build](.github/workflows/workflow-build-container.md)
+- [Reusable Docker Container Deployment to Google Cloud Run](.github/workflows/workflow-deployment-gcr.md)
+- [Reusable Lint and Test Workflow for Node (React) Projects](.github/workflows/workflow-lint-test-node.md)
+- [Reusable Lint and Test Workflow for Python Projects](.github/workflows/workflow-lint-test-python.md)
+- [Reusable Workflow for Standardization Validation](.github/workflows/workflow-standardization-validation.md)
+- [Reusable Build and Deploy to GitHub Pages](.github/workflows/workflow-build-deploy-ghpages.md)
 
 ## Usage
 
 To use these workflows in your project, you can call them using `workflow_dispatch`. Here’s a basic example of how to call a workflow:
 
 ```yaml
-name: My Workflow
+name: <Workflow name>
 
 on:
   push:
