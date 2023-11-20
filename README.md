@@ -24,7 +24,7 @@ Here are the available workflows and their associated documentation:
 To use these workflows in your project, you can call them using `workflow_dispatch`. Here’s a basic example of how to call a workflow:
 
 ```yaml
-name: <Workflow name>
+name: <Workflow's purpose>
 
 on:
   push:
