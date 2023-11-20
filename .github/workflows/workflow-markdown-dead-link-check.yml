@@ -2,6 +2,7 @@ name: Check Markdown links
 
 on:
   workflow_call:
+  push:
 
 jobs:
   markdown-link-check:
