@@ -14,7 +14,7 @@ Here are the available workflows and their associated documentation:
 
 - [Reusable Docker Container
   Build](.github/workflows/workflow-build-container.md)
-- [Reusable Docker Container Deployment to Google Cloud Run](.github/workflows/workflow-deployment-gcp.md)
+- [Reusable Docker Container Deployment to Google Cloud Run](.github/workflows/workflow-deploy-gcp.md)
 - [Reusable Lint and Test Workflow for Node (React) Projects](.github/workflows/workflow-lint-test-node.md)
 - [Reusable Lint and Test Workflow for Python Projects](.github/workflows/workflow-lint-test-python.md)
 - [Reusable Workflow for Standardization Validation](.github/workflows/workflow-repo-standards-validation.md)
