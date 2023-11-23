@@ -26,17 +26,10 @@ jobs:
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: vercel-preview-url
-        uses: zentered/vercel-preview-url@v1.0.0
-        id: vercel_preview_url
-        env:
-            VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        with:
-            vercel_team_id: ${{ secrets.VERCEL_ORG_ID }}
-            vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
+      - run: sleep 30
 
       - name: Comment on PR
         uses: JoseThen/comment-pr@v1.2.0
         with:
-            comment: ${{ steps.vercel_preview_url.outputs}}
+            comment: "Your deployment is like at https://ai-cfia-website.vercel.app/"
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
