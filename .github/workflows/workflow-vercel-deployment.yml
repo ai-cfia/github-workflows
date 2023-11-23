@@ -31,5 +31,5 @@ jobs:
       - name: Comment on PR
         uses: JoseThen/comment-pr@v1.2.0
         with:
-            comment: "Deployment URL preview: https://ai-cfia-website.vercel.app/"
+            comment: "Deployment preview URL: https://ai-cfia-website.vercel.app/"
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
