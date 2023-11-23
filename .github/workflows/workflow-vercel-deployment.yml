@@ -26,10 +26,10 @@ jobs:
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
-      - run: sleep 30
+      - run: sleep 10
 
       - name: Comment on PR
         uses: JoseThen/comment-pr@v1.2.0
         with:
-            comment: "Your deployment is like at https://ai-cfia-website.vercel.app/"
+            comment: "Deployment URL preview: https://ai-cfia-website.vercel.app/"
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
