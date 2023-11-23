@@ -20,6 +20,9 @@ on:
           required: false
           type: string
           default: 'gh-pages'
+      secrets:
+        ENV:
+          required: false
 
 permissions:
   contents: write
@@ -27,12 +30,6 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIR: ${{ inputs.working-dir }}
-      NODE_VERSION: ${{ inputs.node-version }}
-      PUBLISH_DIR: ${{ inputs.publish-dir }}
-      CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
-      PUBLISH_BRANCH: ${{ inputs.publish-branch }}
 
     steps:
     - name: Checkout Repository
@@ -40,21 +37,26 @@ jobs:
 
     - uses: actions/setup-node@v3
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        node-version: ${{ inputs.node-version }}
         cache: npm
-        cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
+        cache-dependency-path: ${{ inputs.working-dir }}
+
+    - name: Set ENV
+      run: |
+        echo "${{ secrets.ENV }}" >> $GITHUB_ENV
+
 
     - name: Install Dependencies
       run: npm install
-      working-directory: ${{ env.WORKING_DIR }}
+      working-directory: ${{ inputs.working-dir }}
 
     - name: Build
       run: npm run build
-      working-directory: ${{ env.WORKING_DIR }}
+      working-directory: ${{ inputs.working-dir }}
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ${{ env.PUBLISH_DIR }}
-        publish_branch: ${{ env.PUBLISH_BRANCH }}
+        publish_dir: ${{ inputs.publish-dir }}
+        publish_branch: ${{ inputs.publish-branch }}
