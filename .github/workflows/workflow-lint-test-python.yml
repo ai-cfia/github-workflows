@@ -1,4 +1,4 @@
-name: Python package
+name: Reusable lint and test workflow for Python projects
 
 on:
     workflow_call:
