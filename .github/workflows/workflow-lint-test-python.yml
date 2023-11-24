@@ -1,10 +1,10 @@
-name: Python package
+name: Reusable lint and test workflow for Python projects
 
 on:
     workflow_call:
 
 jobs:
-  build:
+  lint-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,3 +33,11 @@ jobs:
         LOUIS_DSN: ${{ secrets.LOUIS_DSN }}
         LOUIS_SCHEMA: ${{ secrets.LOUIS_SCHEMA }}
         AZURE_OPENAI_SERVICE: ${{ secrets.AZURE_OPENAI_SERVICE }}
+        FINESSE_WEIGHTS: ${{ secrets.FINESSE_WEIGHTS }}
+        OPENAI_API_ENGINE: ${{ secrets.OPENAI_API_ENGINE }}
+        OPENAI_ENDPOINT: ${{ secrets.OPENAI_ENDPOINT }}
+        PGDATABASE: ${{ secrets.PGDATABASE }}
+        PGHOST: ${{ secrets.PGHOST }}
+        PGPASSWORD: ${{ secrets.PGPASSWORD }}
+        PGPORT: ${{ secrets.PGPORT }}
+        PGUSER: ${{ secrets.PGUSER }}
