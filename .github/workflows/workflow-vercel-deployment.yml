@@ -13,7 +13,7 @@ permissions:
     pull-requests: write
 
 jobs:
-  Deploy-Preview-and-Comment:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,9 +25,7 @@ jobs:
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-
-      - run: sleep 10
-
+        
       - name: Comment on PR
         uses: JoseThen/comment-pr@v1.2.0
         with:
