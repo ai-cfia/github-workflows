@@ -24,10 +24,12 @@ jobs:
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-        
-      - name: Comment on PR
+        run: echo "DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_ENV
+      - name: Set URL to dev environment
+        run: vc alias "$DEPLOYMENT_URL" finesse-frontend-dev.vercel.com --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Comment on PR with Custom Domain
         uses: JoseThen/comment-pr@v1.2.0
         with:
-            comment: "Deployment preview URL: https://ai-cfia-website.vercel.app/"
+            comment: "Deployment preview URL: https://finesse-frontend-dev.vercel.com/"
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
