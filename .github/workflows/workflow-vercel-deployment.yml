@@ -1,11 +1,17 @@
 name: Vercel Preview Deployment
 
+on:
+  workflow_call:
+    inputs:
+      repository-name:
+        required: true
+        type: string
+
+
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-on:
-    workflow_call:
+  REPOSITORY_NAME: ${{ inputs.repository-name }}
 
 permissions:
     checks: read
@@ -16,7 +22,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
@@ -24,10 +30,12 @@ jobs:
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-        
-      - name: Comment on PR
+        run: echo "DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_ENV
+      - name: Set URL to dev environment
+        run: vc alias "$DEPLOYMENT_URL" ${{ env.REPOSITORY_NAME }}-dev.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Comment on PR with Custom Domain
         uses: JoseThen/comment-pr@v1.2.0
         with:
-            comment: "Deployment preview URL: https://ai-cfia-website.vercel.app/"
+            comment: "Deployment preview URL: https://${{ env.REPOSITORY_NAME }}-dev.vercel.app/"
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
