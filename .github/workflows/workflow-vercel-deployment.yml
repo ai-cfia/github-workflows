@@ -3,15 +3,20 @@ name: Vercel Preview Deployment
 on:
   workflow_call:
     inputs:
-      repository-name:
+      vercel-project-name:
         required: true
         type: string
+      deployment_environment:
+        required: true
+        type: string
+        description: 'Deployment environment (dev, prd, uat)'
 
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-  REPOSITORY_NAME: ${{ inputs.repository-name }}
+  VERCEL_PROJECT_NAME: ${{ inputs.vercel-project-name}}
+  DEPLOYMENT_ENVIRONMENT: ${{ inputs.deployment_environment }}
 
 permissions:
     checks: read
@@ -32,10 +37,4 @@ jobs:
       - name: Deploy Project Artifacts to Vercel
         run: echo "DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_ENV
       - name: Set URL to dev environment
-        run: vc alias "$DEPLOYMENT_URL" ${{ env.REPOSITORY_NAME }}-dev.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Comment on PR with Custom Domain
-        uses: JoseThen/comment-pr@v1.2.0
-        with:
-            comment: "Deployment preview URL: https://${{ env.REPOSITORY_NAME }}-dev.vercel.app/"
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: vc alias "$DEPLOYMENT_URL" ${{ env.VERCEL_PROJECT_NAME }}-${{ env.DEPLOYMENT_ENVIRONMENT }}.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
