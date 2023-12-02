@@ -1,0 +1,60 @@
+name: Reusable Build and Deploy to GitHub Pages
+
+on:
+    workflow_call:
+      inputs:
+        node-version:
+          required: true
+          type: string
+        publish-dir:
+          required: true
+          type: string
+        cache-dependency-path:
+          required: true
+          type: string
+        working-dir:
+          required: false
+          type: string
+          default: '.'
+        publish-branch:
+          required: false
+          type: string
+          default: 'gh-pages'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      WORKING_DIR: ${{ inputs.working-dir }}
+      NODE_VERSION: ${{ inputs.node-version }}
+      PUBLISH_DIR: ${{ inputs.publish-dir }}
+      CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
+      PUBLISH_BRANCH: ${{ inputs.publish-branch }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
+
+    - name: Install Dependencies
+      run: npm install
+      working-directory: ${{ env.WORKING_DIR }}
+
+    - name: Build
+      run: npm run build
+      working-directory: ${{ env.WORKING_DIR }}
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ${{ env.PUBLISH_DIR }}
+        publish_branch: ${{ env.PUBLISH_BRANCH }}
