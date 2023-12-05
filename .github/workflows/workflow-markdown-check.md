@@ -4,4 +4,3 @@
    - **Steps**
      1. Check for markdown dead links
      2. Validate line 80 wrap
-   - **Usage:** Call this workflow while making sure the necessary secrets are inherited for successful execution.
