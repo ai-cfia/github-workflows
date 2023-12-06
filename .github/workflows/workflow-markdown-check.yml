@@ -1,4 +1,4 @@
-name: Check Markdown links
+name: Check Markdown conformance to AI Lab standards
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
         required: false
         type: string
   push:
-    
+
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
