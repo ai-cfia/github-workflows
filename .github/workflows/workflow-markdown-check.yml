@@ -1,0 +1,27 @@
+name: Check Markdown conformance to AI Lab standards
+
+on:
+  workflow_call:
+    inputs:
+      config-file-path:
+        required: false
+        type: string
+  push:
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@master
+
+    - name: Validating links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        config-file: '${{ inputs.config-file-path }}'
+
+    - name: Run markdown lint
+      uses: DavidAnson/markdownlint-cli2-action@v14
+      with:
+        fix: true
+      if: always() # Run step even if previous steps fail.
