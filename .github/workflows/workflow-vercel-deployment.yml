@@ -50,7 +50,7 @@ jobs:
 
       - uses: hackzcompany/vercel-env-push-action@v4
         with:
-          project: my-project
+          project: ${{ env.VERCEL_PROJECT_NAME }}
           team_id: ${{ secrets.VERCEL_ORG_ID }}
           token: ${{ secrets.VERCEL_TOKEN }}
           environments: 'development,preview'
