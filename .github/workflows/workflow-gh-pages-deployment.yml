@@ -44,6 +44,12 @@ jobs:
         cache: npm
         cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
 
+    - name: Read ENV file
+      uses: alekangelov/secret-envfile@v1
+      with:
+        content: ${{ secrets.ENV }}
+        filename: .env
+
     - name: Install Dependencies
       run: npm install
       working-directory: ${{ env.WORKING_DIR }}
@@ -51,8 +57,6 @@ jobs:
     - name: Build
       run: npm run build
       working-directory: ${{ env.WORKING_DIR }}
-      env:
-        BASE_URL: ${{ secrets.BASE_URL }}
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
