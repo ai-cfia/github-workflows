@@ -20,6 +20,9 @@ on:
           required: false
           type: string
           default: 'gh-pages'
+        subdomain:
+          required: false
+          type: string
 
 permissions:
   contents: write
@@ -53,6 +56,8 @@ jobs:
       working-directory: ${{ env.WORKING_DIR }}
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
+        REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
+        PUBLIC_URL: ${{ secrets.PUBLIC_URL }}
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
