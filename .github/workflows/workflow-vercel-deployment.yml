@@ -54,9 +54,14 @@ jobs:
       - name: Set URL to dev environment
         run: vc alias "$DEPLOYMENT_URL" ${{ env.VERCEL_PROJECT_NAME }}-${{ env.DEPLOYMENT_ENVIRONMENT }}.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Comment on PR with Custom Domain
-        if: github.event_name == 'pull_request' && github.event.action == 'opened'
-        uses: JoseThen/comment-pr@v1.2.0
+      - name: Update PR with test results
+        uses: edumserrano/find-create-or-update-comment@v2
         with:
-            comment: "Deployment preview URL: https://${{ inputs.project-name }}-${{ inputs.deployment-environment }}.vercel.app/"
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: '<!-- ${{ github.event.pull_request.number }}/${{ inputs.project-name }} -->'
+          comment-author: 'github-actions[bot]'
+          body: | # can be a single value or you can compose text with multi-line values
+            <!-- ${{ github.event.pull_request.number }}/${{ inputs.project-name }} -->
+            "Deployment URL: https://${{ inputs.project-name }}-${{ inputs.deployment-environment }}.vercel.app/"
+            "Preview URL: $DEPLOYMENT_URL"
+          edit-mode: replace
