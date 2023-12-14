@@ -52,12 +52,11 @@ jobs:
         id: deployment_step
         run: |
           echo "DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_ENV
-          echo "::set-output name=deployment_url::$DEPLOYMENT_URL"
 
       - name: Set URL to dev environment
         run: vc alias "$DEPLOYMENT_URL" ${{ env.VERCEL_PROJECT_NAME }}-${{ env.DEPLOYMENT_ENVIRONMENT }}.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Update PR with test results
+      - name: Update PR comment
         uses: edumserrano/find-create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -66,5 +65,5 @@ jobs:
           body: |
             <!-- unique identifier=${{ inputs.project-name }} -->
             "Deployment URL: https://${{ inputs.project-name }}-${{ inputs.deployment-environment }}.vercel.app/"
-            "Preview URL: ${{ steps.deployment_step.outputs.deployment_url }}"
+            "Preview URL: ${{ env.DEPLOYMENT_URL }}"
           edit-mode: replace
