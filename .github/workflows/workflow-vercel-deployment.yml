@@ -39,6 +39,20 @@ jobs:
       - name: install npm
         run: npm install -g npm@9.8.1
 
+      - name: Create .env from secret
+        uses: alekangelov/secret-envfile@v1
+        with:
+          content: ${{ secrets.ENV }}
+          filename: .env
+
+      - name: Push env variables to vercel
+        uses: hackzcompany/vercel-env-push-action@v4
+        with:
+          project: ${{ env.VERCEL_PROJECT_NAME }}
+          team_id: ${{ secrets.VERCEL_ORG_ID }}
+          token: ${{ secrets.VERCEL_TOKEN }}
+          env_file: .env
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
