@@ -86,8 +86,7 @@ jobs:
         id: docker_build_latest
         uses: docker/build-push-action@v5
         with:
-          context: ./${{ github.event.repository.name }}
-          file: ./${{ github.event.repository.name }}/Dockerfile
+          context: .
           push: true
           tags: ${{ inputs.registry }}/${{ inputs.container-name }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache
