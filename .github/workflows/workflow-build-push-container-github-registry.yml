@@ -99,3 +99,4 @@ jobs:
 
       - name: Image digest (latest)
         run: echo ${{ steps.docker_build_latest.outputs.digest }}
+        
