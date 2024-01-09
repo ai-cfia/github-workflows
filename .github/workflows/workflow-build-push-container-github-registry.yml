@@ -1,0 +1,102 @@
+name: Reusable workflow to build and push docker container to github registry
+
+on:
+  workflow_call:
+    inputs:
+      container-name:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+      registry:
+        required: true
+        type: string
+
+jobs:
+  build-and-push-on-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the github container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-${{inputs.container-name}}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{inputs.container-name}}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+
+      - name: Refresh Cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+  
+  build-and-push-on-pr-merge:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the github container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ inputs.tag }}
+          restore-keys: ${{ runner.os }}-buildx
+
+      - name: Build and push (latest)
+        id: docker_build_latest
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ github.event.repository.name }}
+          file: ./${{ github.event.repository.name }}/Dockerfile
+          push: true
+          tags: ${{ inputs.registry }}/${{ inputs.container-name }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+
+      - name: Refresh Cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Image digest (latest)
+        run: echo ${{ steps.docker_build_latest.outputs.digest }}
