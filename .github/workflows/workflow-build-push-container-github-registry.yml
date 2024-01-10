@@ -1,4 +1,4 @@
-name: Reusable workflow to build and push docker container to github registry
+name: Reusable workflow to build and push docker container to github container registry
 
 on:
   workflow_call:
@@ -24,6 +24,21 @@ jobs:
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v4
+
+      - name: Check if a Dockerfile is present at the root of the repo
+        id: check-file
+        run: |
+          if [ -f Dockerfile ]; then
+            echo "::set-output name=exists::true"
+          else
+            echo "::set-output name=exists::false"
+          fi
+
+      - name: Cancel the workflow if no Dockerfile is present
+        if: steps.check-file.outputs.exists == 'false'
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
 
       - name: Set up Docker Buildx
         id: buildx
