@@ -108,8 +108,12 @@ jobs:
       - name: Install Python dependencies
         run: pip install requests
 
+      - name: Download the python script from https://github.com/ai-cfia/github-workflows
+        run: |
+          curl -LO https://raw.githubusercontent.com/ai-cfia/github-workflows/main/scripts/remove-old-image.py
+
       - name: Run Python Script
-        run: python scripts/remove-old-image.py
+        run: python remove-old-image.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY: ${{ inputs.registry }}
