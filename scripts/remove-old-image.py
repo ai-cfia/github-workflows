@@ -19,19 +19,24 @@ def delete_old_image(version_id, org, headers, auth):
         print('error deleting the previous container:', response.status_code, response.text)
         exit(1)
     
-# Find the previous tag for a specific container
+"""
+Find the previous tag for a specific container.
+Delete the previous tag if it exists and it is not the current one. This wont delete the current tag or older PR tags.
+Check if tags is not empty and check if the len is == 1. If that is the case, it means that the only tag is the previous one.
+"""
 def find_previous_container_tag(response, pr_tag):
     version_id = None
     for version in response:
+        print(f"Found tags {version['metadata']['container']['tags']})")
         tags = version['metadata']['container']['tags']
-        if pr_tag not in tags and tags:
+        if pr_tag not in tags and len(tags) == 1 and tags:
             version_id = version['id']
             print(f"Previous tag found {tags[0]} with version_id {version_id}")
             return tags[0], version_id
 
     print(f"Container name {container_name} not found or the only tag found was the current one. If that is the case, you can ignore this error.")
     exit(0)
-
+        
 # Get all GCR container information
 def get_container_tags(org, container_name, auth, headers, container_path):
     get_versions = f"https://api.github.com/orgs/{org}/packages/container/{container_name}/versions"

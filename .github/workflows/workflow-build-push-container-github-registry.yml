@@ -64,8 +64,13 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: ${{ runner.os }}-buildx
 
-      - name: Build and push (latest)
-        id: docker_build_latest
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch_name
+
+      - name: Build and push (3 tags | commit number, pr number, branch name)
+        id: docker_build_and_tag
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -73,6 +78,7 @@ jobs:
           tags: |
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.number }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.branch }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
@@ -82,7 +88,7 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Image digest (latest)
-        run: echo ${{ steps.docker_build_latest.outputs.digest }}
+        run: echo ${{ steps.docker_build_and_tag.outputs.digest }}
 
   remove-old-image:
     runs-on: ubuntu-latest
