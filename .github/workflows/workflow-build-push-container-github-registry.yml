@@ -42,7 +42,9 @@ jobs:
       - name: Wait for run cancellation
         if: steps.check-file.outputs.exists == 'false'
         shell: bash
-        run: while true; do echo "Waiting for job to be cancelled"; sleep 5; done
+        run: |
+          echo "No Dockerfile found, cancelling the workflow."
+          while true; do echo "Waiting for job to be cancelled"; sleep 5; done
 
       - name: Set up Docker Buildx
         id: buildx
