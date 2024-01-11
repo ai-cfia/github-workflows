@@ -34,17 +34,13 @@ jobs:
             echo "::set-output name=exists::false"
           fi
 
-      - name: Cancel the workflow if no Dockerfile is present
+      - name: Early exit if no Dockerfile is present
         if: steps.check-file.outputs.exists == 'false'
-        uses: andymckay/cancel-action@0.2
-
-      # needed since the run is not cancelled immediately
-      - name: Wait for run cancellation
-        if: steps.check-file.outputs.exists == 'false'
-        shell: bash
         run: |
-          echo "No Dockerfile found, cancelling the workflow."
-          while true; do echo "Waiting for job to be cancelled"; sleep 5; done
+          gh run cancel ${{ github.run_id }}
+          gh run watch ${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         id: buildx
@@ -121,4 +117,3 @@ jobs:
           PR_TAG: ${{ github.event.number }}
           USER: ${{ github.actor }}
           CURRENT_COMMIT: ${{ inputs.tag }}
-        
