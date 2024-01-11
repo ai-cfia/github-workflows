@@ -36,9 +36,13 @@ jobs:
 
       - name: Cancel the workflow if no Dockerfile is present
         if: steps.check-file.outputs.exists == 'false'
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
+        uses: andymckay/cancel-action@0.2
+
+      # needed since the run is not cancelled immediately
+      - name: Wait for run cancellation
+        if: steps.check-file.outputs.exists == 'false'
+        shell: bash
+        run: while true; do echo "Waiting for job to be cancelled"; sleep 5; done
 
       - name: Set up Docker Buildx
         id: buildx
