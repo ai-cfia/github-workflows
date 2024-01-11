@@ -12,11 +12,6 @@ on:
       registry:
         required: true
         type: string
-  pull_request:
-    types:
-      - opened
-      - closed
-      - synchronize
 
 jobs:
   build-push-image:
