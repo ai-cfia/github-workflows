@@ -101,7 +101,7 @@ jobs:
 
       - name: Download the python script from https://github.com/ai-cfia/github-workflows
         run: |
-          curl -LO https://raw.githubusercontent.com/ai-cfia/github-workflows/main/scripts/remove-old-image.py
+          curl -LO https://raw.githubusercontent.com/ai-cfia/github-workflows/63-as-a-devops-i-would-like-to-create-a-workflow-to-push-images-to-this-organisation-docker-registry/scripts/remove-old-image.py
 
       - name: Run Python Script
         run: python remove-old-image.py
