@@ -80,22 +80,18 @@ jobs:
       with:
         script: |
           const { owner, repo } = context.repo;
-          const githubRef = process.env['GITHUB_REF'];
-          let refBranchNumber;
-          
-          if (githubRef.startsWith('refs/pull/')) {
-            const match = /refs\/pull\/(\d+)\/merge/.exec(githubRef);
-            if (match) {
-              refBranchNumber = match[1]; // Numéro de la pull request
-            }
+          let refBranchNumber; 
+
+          if (context.eventName === 'pull_request') {
+            refBranchNumber = context.payload.pull_request.head.ref;
           } else {
-            refBranchNumber = githubRef.replace('refs/heads/', '');
+            refBranchNumber = process.env['GITHUB_REF'].replace('refs/heads/', '');
           }
 
           try {
             await github.rest.repos.getContent({
               owner,
-              repo,7
+              repo,
               path: `README.md`,
               ref: refBranchNumber
             });
@@ -113,17 +109,14 @@ jobs:
       with:
         script: |
           const { owner, repo } = context.repo;
-          const githubRef = process.env['GITHUB_REF'];
-          let refBranchNumber;
-
-          if (githubRef.startsWith('refs/pull/')) {
-            const match = /refs\/pull\/(\d+)\/merge/.exec(githubRef);
-            if (match) {
-              refBranchNumber = match[1]; // Numéro de la pull request
-            }
+          let refBranchNumber; 
+          
+          if (context.eventName === 'pull_request') {
+            refBranchNumber = context.payload.pull_request.head.ref;
           } else {
-            refBranchNumber = githubRef.replace('refs/heads/', '');
+            refBranchNumber = process.env['GITHUB_REF'].replace('refs/heads/', '');
           }
+
 
           try {
             await github.rest.repos.getContent({
