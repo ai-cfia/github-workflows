@@ -117,7 +117,6 @@ jobs:
             refBranchNumber = process.env['GITHUB_REF'].replace('refs/heads/', '');
           }
 
-
           try {
             await github.rest.repos.getContent({
               owner,
