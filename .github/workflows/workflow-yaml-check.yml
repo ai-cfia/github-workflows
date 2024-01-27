@@ -1,3 +1,4 @@
+---
 name: Check Yaml conformance to AI Lab standards
 
 on:
@@ -12,10 +13,10 @@ jobs:
   yaml-lint-check:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Lint YAML files
-      uses: ibiqlik/action-yamllint@v3
-      with:
-        config_file: ${{ inputs.config-file-path }}
+      - name: Lint YAML files
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_file: ${{ inputs.config-file-path }}
