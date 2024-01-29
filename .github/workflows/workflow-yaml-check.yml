@@ -16,7 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Lint YAML files
-        uses: ibiqlik/action-yamllint@v3
+      - name: Get changed files
+        id: files
+        uses: lots0logs/gh-action-get-changed-files@2.2.2
         with:
-          config_file: ${{ inputs.config-file-path }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: yamllint ${{ steps.files.outputs.all }}
