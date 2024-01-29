@@ -61,7 +61,7 @@ jobs:
         id: extract_branch_name
 
       - name: Build and push (3 tags | commit number, pr number and branch name) (unmerged)
-        id: docker_build_and_tag
+        id: docker_build_and_tag_unmerged
         if: github.event.pull_request.merged == false
         uses: docker/build-push-action@v5
         with:
@@ -75,7 +75,7 @@ jobs:
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
       - name: Build and push (2 tags | commit number and branch name) (merged)
-        id: docker_build_and_tag
+        id: docker_build_and_tag_merged
         if: github.event.pull_request.merged == true
         uses: docker/build-push-action@v5
         with:
@@ -93,7 +93,12 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Image digest (latest)
-        run: echo ${{ steps.docker_build_and_tag.outputs.digest }}
+        if: github.event.pull_request.merged == false
+        run: echo ${{ steps.docker_build_and_tag_unmerged.outputs.digest }}
+
+      - name: Image digest (latest)
+        if: github.event.pull_request.merged == true
+        run: echo ${{ steps.docker_build_and_tag_merged.outputs.digest }}
 
   remove-old-image:
     runs-on: ubuntu-latest
