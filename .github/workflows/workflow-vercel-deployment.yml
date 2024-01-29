@@ -1,3 +1,4 @@
+---
 name: Vercel Static Frontend Deployment
 
 on:
@@ -18,9 +19,9 @@ env:
   DEPLOYMENT_ENVIRONMENT: ${{ inputs.deployment-environment }}
 
 permissions:
-    checks: read
-    contents: read
-    pull-requests: write
+  checks: read
+  contents: read
+  pull-requests: write
 
 jobs:
   deploy:
@@ -43,20 +44,32 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=preview \
+              --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Project Artifacts to Vercel
-        run: echo "DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_ENV
+        run: |
+              echo "DEPLOYMENT_URL=$(vercel deploy --prebuilt \
+              --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_ENV
 
       - name: Set URL to dev environment
-        run: vc alias "$DEPLOYMENT_URL" ${{ env.VERCEL_PROJECT_NAME }}-${{ env.DEPLOYMENT_ENVIRONMENT }}.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          PROJECT_NAME="${{ env.VERCEL_PROJECT_NAME }}-"
+          ENV_DOMAIN="${{ env.DEPLOYMENT_ENVIRONMENT }}.vercel.app"
+          VERCEL_URL="${PROJECT_NAME}${ENV_DOMAIN}"
+          vc alias "$DEPLOYMENT_URL" "$VERCEL_URL" \
+          --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Comment on PR with Custom Domain
-        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        if: github.event_name=='pull_request' && github.event.action=='opened'
         uses: JoseThen/comment-pr@v1.2.0
+        env:
+          PREFIX: "Deployment preview URL: https://"
+          PROJ_NAME: "${{ inputs.project-name }}-"
+          DEPLOY_ENV: "${{ inputs.deployment-environment }}.vercel.app/"
         with:
-            comment: "Deployment preview URL: https://${{ inputs.project-name }}-${{ inputs.deployment-environment }}.vercel.app/"
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          comment: "${{ env.PREFIX }}${{ env.PROJ_NAME }}${{ env.DEPLOY_ENV }}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

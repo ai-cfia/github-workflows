@@ -1,0 +1,36 @@
+---
+name: Check Yaml conformance to AI Lab standards
+
+on:
+  workflow_call:
+    inputs:
+      config-file-path:
+        required: false
+        type: string
+  push:
+
+jobs:
+  yaml-lint-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: files
+        uses: lots0logs/gh-action-get-changed-files@2.2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: |
+          files=$(echo '${{ steps.files.outputs.all }}' | jq -r '.[]')
+          for file in $files; do
+            if [[ $file == *.yml || $file == *.yaml ]]; then
+              yamllint "$file"
+            fi
+          done
+        shell: bash
