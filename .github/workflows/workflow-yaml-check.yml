@@ -26,4 +26,11 @@ jobs:
         run: pip install yamllint
 
       - name: Lint YAML files
-        run: yamllint ${{ steps.files.outputs.all }}
+        run: |
+          files=$(echo '${{ steps.files.outputs.all }}' | jq -r '.[]')
+          for file in $files; do
+            if [[ $file == *.yml || $file == *.yaml ]]; then
+              yamllint "$file"
+            fi
+          done
+        shell: bash
