@@ -60,8 +60,9 @@ jobs:
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch_name
 
-      - name: Build and push (3 tags | commit number, pr number, branch name)
+      - name: Build and push (3 tags | commit number, pr number and branch name) (unmerged)
         id: docker_build_and_tag
+        if: github.event.pull_request.merged == false
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -70,6 +71,19 @@ jobs:
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.number }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.branch }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+
+      - name: Build and push (2 tags | commit number and branch name) (merged)
+        id: docker_build_and_tag
+        if: github.event.pull_request.merged == true
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.pull_request.base.ref }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
@@ -99,16 +113,28 @@ jobs:
       - name: Install Python dependencies
         run: pip install requests
 
-      - name: Download the python script from https://github.com/ai-cfia/github-workflows
+      - name: Download the python script from https://github.com/ai-cfia/github-workflows to delete the previous image
         run: |
           curl -LO https://raw.githubusercontent.com/ai-cfia/github-workflows/63-as-a-devops-i-would-like-to-create-a-workflow-to-push-images-to-this-organisation-docker-registry/scripts/remove-old-image.py
 
-      - name: Run Python Script
+      - name: Delete the previous image (unmerged pull request)
+        if: github.event.pull_request.merged == false
         run: python remove-old-image.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY: ${{ inputs.registry }}
           CONTAINER_NAME: ${{ inputs.container-name }}
-          PR_TAG: ${{ github.event.number }}
+          UNIQUE_TAG: ${{ github.event.number }}
+          USER: ${{ github.actor }}
+          CURRENT_COMMIT: ${{ inputs.tag }}
+
+      - name: Delete the previous image (merged pull request)
+        if: github.event.pull_request.merged == true
+        run: python remove-old-image.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY: ${{ inputs.registry }}
+          CONTAINER_NAME: ${{ inputs.container-name }}
+          UNIQUE_TAG: ${{ github.event.pull_request.base.ref }}
           USER: ${{ github.actor }}
           CURRENT_COMMIT: ${{ inputs.tag }}
