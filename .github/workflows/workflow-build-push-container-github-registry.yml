@@ -104,27 +104,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-push-image
     steps:
-      - name: Check Out Repo
-        uses: actions/checkout@v4
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: 3.8
 
-      - name: Install Python dependencies
-        run: pip install requests
+      - name: Install the remove-previous-image from github.com/ai-cfia/devops inside the user-site
+        run: python -m pip install --user git+https://$USER:$USER_TOKEN@github.com/ai-cfia/devops.git@26-as-a-devops-i-want-to-create-unit-tests-for-the-remove-previous-imagepy-script
+        env:
+          USER: ${{ secrets.USER }}
+          USER_TOKEN: ${{ secrets.USER_TOKEN }}
 
-      - name: Download the python script from https://github.com/ai-cfia/github-workflows to delete the previous image
+      - name: Access user site-packages
         run: |
-          curl -LO https://raw.githubusercontent.com/ai-cfia/github-workflows/63-as-a-devops-i-would-like-to-create-a-workflow-to-push-images-to-this-organisation-docker-registry/scripts/remove-old-image.py
+          USER_SITE=$(python -m site --user-site)
+          echo "Path to site-packages is $USER_SITE"
+          echo "USER_SITE=$USER_SITE" >> $GITHUB_ENV
 
       - name: Delete the previous image (unmerged pull request)
         if: github.event.pull_request.merged == false
-        run: python remove-old-image.py
+        run: python $USER_SITE/remove-previous-image/remove_previous_image.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY: ${{ inputs.registry }}
@@ -135,7 +134,7 @@ jobs:
 
       - name: Delete the previous image (merged pull request)
         if: github.event.pull_request.merged == true
-        run: python remove-old-image.py
+        run: python $USER_SITE/remove-previous-image/remove_previous_image.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY: ${{ inputs.registry }}

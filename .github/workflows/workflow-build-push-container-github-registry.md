@@ -8,7 +8,7 @@ merge a pull request, the workflow will be triggered and will start 2 jobs.
 The first job will build and push the new image with 2 tags. The first tag is
 the pull request number, and the second tag is the commit that triggered the
 action. The second job will remove the previous image based on the previous
-tag using [this script](/scripts/remove-old-image.py). If no Dockerfile is found
+tag. If no Dockerfile is found
 at the root of the repository, the workflow will be cancelled.
 - **Required Secrets:**
   - None
