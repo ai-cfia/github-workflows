@@ -1,3 +1,4 @@
+---
 name: Reusable workflow to build and push docker container to Azure
 
 on:
@@ -44,7 +45,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.ACR_SERVER }}/${{inputs.container-name}}:${{inputs.tag}}
+          tags: >-
+            ${{ secrets.ACR_SERVER }}/${{inputs.container-name}}:${{inputs.tag}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
