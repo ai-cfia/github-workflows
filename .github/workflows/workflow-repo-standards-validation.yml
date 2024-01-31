@@ -71,7 +71,7 @@ jobs:
         # Run step even if previous steps fail.
         if: always()
 
-      - name: Check repository license
+      - name: Check repository LICENSE
         uses: actions/github-script@v5
         with:
           script: |
