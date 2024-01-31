@@ -14,7 +14,7 @@ jobs:
           script: |
             const { repo } = context.repo;
 
-            if (repoName.includes('_')) {
+            if (repo.includes('_')) {
               core.setFailed("Repository name contains underscores (_). " +
                             "Please use dashes (-) instead.");
             }
