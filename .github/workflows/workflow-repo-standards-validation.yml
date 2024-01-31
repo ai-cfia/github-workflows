@@ -3,6 +3,7 @@ name: Reusable workflow to validate organization standards
 
 on:
   workflow_call:
+  push:
 
 jobs:
   validate-name:
@@ -14,7 +15,7 @@ jobs:
           script: |
             const { repo } = context.repo;
 
-            if (repoName.includes('_')) {
+            if (repo.includes('_')) {
               core.setFailed("Repository name contains underscores (_). " +
                             "Please use dashes (-) instead.");
             }
@@ -70,7 +71,7 @@ jobs:
         # Run step even if previous steps fail.
         if: always()
 
-      - name: Check repository license
+      - name: Check repository LICENSE
         uses: actions/github-script@v5
         with:
           script: |
