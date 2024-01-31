@@ -75,11 +75,30 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const repoDetails = await github.rest.repos.get({ owner, repo });
+            let refBranchNumber;
 
-            if (!repoDetails.data.license) {
-              core.setFailed("The repository does not have a license, " +
-                            "please add one.");
+            if (context.eventName === 'pull_request') {
+              refBranchNumber = context.payload.pull_request.head.ref;
+            } else {
+              refBranchNumber = process.env['GITHUB_REF']
+                .replace('refs/heads/', '');
+            }
+
+            try {
+              await github.rest.repos.getContent({
+                owner,
+                repo,
+                path: `LICENSE`,
+                ref: refBranchNumber
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                core.setFailed(`The ${refBranchNumber} branch does not have ` +
+                              `a LICENSE file, please add one.`);
+              } else {
+                core.setFailed(`An error occurred while checking for ` +
+                              `LICENSE: ${error.message}`);
+              }
             }
         # Run step even if previous steps fail.
         if: always()
