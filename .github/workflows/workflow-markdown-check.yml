@@ -18,14 +18,14 @@ jobs:
       with:
         ref: ${{ github.head_ref }}
 
-      - name: Validating links
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
-        with:
-          config-file: '${{ inputs.config-file-path }}'
+    - name: Validating links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        config-file: '${{ inputs.config-file-path }}'
 
-      - name: Run markdown lint
-        uses: DavidAnson/markdownlint-cli2-action@v14
-        with:
-          fix: true
-        # Run step even if previous steps fail.
-        if: always()
+    - name: Run markdown lint
+      uses: DavidAnson/markdownlint-cli2-action@v14
+      with:
+        fix: true
+      # Run step even if previous steps fail.
+      if: always()
