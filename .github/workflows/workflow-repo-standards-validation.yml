@@ -3,6 +3,7 @@ name: Reusable workflow to validate organization standards
 
 on:
   workflow_call:
+  push:
 
 jobs:
   validate-name:
