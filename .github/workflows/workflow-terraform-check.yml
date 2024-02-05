@@ -1,0 +1,38 @@
+---
+name: Check Terraform conformance to AI Lab standards
+
+on:
+  workflow_call:
+    inputs:
+      config-file-path:
+        required: false
+        type: string
+  push:
+
+jobs:
+  terraform-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: latest
+
+      - name: Terraform Initialization
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive -diff
+
+      - name: Install TFLint
+        run: |
+          URL="https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh"
+          curl -s $URL | bash
+
+      - name: Run TFLint
+        run:
+          tflint --recursive --config \
+          "$(pwd)/${{ github.event.inputs.config-file-path }}"
