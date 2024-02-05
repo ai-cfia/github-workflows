@@ -26,10 +26,13 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check -recursive -diff
 
-      - name: Install TFLint
-        run: |
-          URL="https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh"
-          curl -s $URL | bash
+      - uses: terraform-linters/setup-tflint@v3
+        name: Setup TFLint
+        with:
+          tflint_version: v0.44.1
+
+      - name: Init TFLint
+        run: tflint --init
 
       - name: Run TFLint
         run: |
