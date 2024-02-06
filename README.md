@@ -33,6 +33,8 @@ Here are the available workflows and their associated documentation:
   Pages](.github/workflows/workflow-gh-pages-deployment.md)
 - [Reusable Vercel
   Deployment](.github/workflows/workflow-vercel-deployment.md)
+- [Reusable Build 
+  and Push to GCR](.github/workflows/workflow-build-push-container-github-registry.md)
 
 ## Usage
 
