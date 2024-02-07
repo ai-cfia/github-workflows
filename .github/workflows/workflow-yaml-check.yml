@@ -30,7 +30,12 @@ jobs:
           files=$(echo '${{ steps.files.outputs.all }}' | jq -r '.[]')
           for file in $files; do
             if [[ $file == *.yml || $file == *.yaml ]]; then
-              yamllint "$file"
+              # Check if a custom config path is provided and file exists
+              if [[ -n "$config_path" && -f "$config_path" ]]; then
+               yamllint -c ${{ inputs.config-file-path }} "$file"
+              else
+                yamllint "$file"
+              fi
             fi
           done
         shell: bash
