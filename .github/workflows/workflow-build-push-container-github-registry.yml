@@ -112,9 +112,8 @@ jobs:
 
       - name: Install the remove-previous-image from github.com/ai-cfia/devops inside the user-site
         run: >
-          python -m pip install --user
-          git+https://$USER:$USER_TOKEN@github.com/ai-cfia/devops.git@
-          26-as-a-devops-i-want-to-create-unit-tests-for-the-remove-previous-imagepy-script
+          python -m pip install --user \
+          git+https://$USER:$USER_TOKEN@github.com/ai-cfia/devops.git@26-as-a-devops-i-want-to-create-unit-tests-for-the-remove-previous-imagepy-script
         env:
           USER: ${{ secrets.USER }}
           USER_TOKEN: ${{ secrets.USER_TOKEN }}
