@@ -1,0 +1,45 @@
+---
+name: Check Terraform conformance to AI Lab standards
+
+on:
+  workflow_call:
+    inputs:
+      config-file-path:
+        required: false
+        type: string
+
+jobs:
+  terraform-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: latest
+
+      - name: Terraform Initialization
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive -diff
+
+      - uses: terraform-linters/setup-tflint@v3
+        name: Setup TFLint
+        with:
+          tflint_version: v0.44.1
+
+      - name: Init TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        run: |
+          if [ -n "${{ github.event.inputs.config-file-path }}" ]; then
+            tflint --recursive --config \
+            "${{ github.workspace }}/
+            ${{ github.event.inputs.config-file-path }}"
+          else
+            tflint --recursive
+          fi
