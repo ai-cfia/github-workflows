@@ -32,7 +32,7 @@ jobs:
             if [[ $file == *.yml || $file == *.yaml ]]; then
               # Check if a custom config path is provided and file exists
               if [[ -n "$config_path" && -f "$config_path" ]]; then
-               yamllint -c ${{ inputs.config-file-path }} "$file"
+                yamllint -c "${{ github.workspace }}${{ github.event.inputs.config-file-path }}" "$file"
               else
                 yamllint "$file"
               fi
