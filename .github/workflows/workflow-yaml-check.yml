@@ -25,6 +25,13 @@ jobs:
       - name: Install yamllint
         run: pip install yamllint
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ai-cfia/github-workflows
+          path: github-workflows
+          ref: main
+
       - name: Lint YAML files
         run: |
           files=$(echo '${{ steps.files.outputs.all }}' | jq -r '.[]')
@@ -34,9 +41,7 @@ jobs:
               if [ -n "${{ github.event.inputs.config-file-path }}" ]; then
                 yamllint -c "${{ github.workspace }}/${{ github.event.inputs.config-file-path }}" "$file"
               else
-                default_config_url="https://raw.githubusercontent.com/ai-cfia/github-workflows/main/.yamllint.yml"
-                curl -s -O $default_config_url
-                yamllint -c "./$(basename $default_config_url)" "$file"
+                yamllint -c github-workflows/.yamllint.yml "$file"
               fi
             fi
           done
