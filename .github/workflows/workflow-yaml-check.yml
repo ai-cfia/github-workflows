@@ -31,6 +31,9 @@ jobs:
           repository: ai-cfia/github-workflows
           path: github-workflows
           ref: main
+          sparse-checkout: |
+            .yamllint.yml
+          sparse-checkout-cone-mode: false
 
       - name: Lint YAML files
         run: |
