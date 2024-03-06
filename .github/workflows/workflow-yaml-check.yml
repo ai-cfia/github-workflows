@@ -22,19 +22,30 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+
       - name: Install yamllint
         run: pip install yamllint
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ai-cfia/github-workflows
+          path: github-workflows
+          ref: main
+          sparse-checkout: |
+            .yamllint.yml
+          sparse-checkout-cone-mode: false
 
       - name: Lint YAML files
         run: |
           files=$(echo '${{ steps.files.outputs.all }}' | jq -r '.[]')
           for file in $files; do
-            if [[ $file == *.yml || $file == *.yaml ]]; then
+          if [[ -f "$file" && ( $file == *.yml || $file == *.yaml ) ]]; then
               # Check if a custom config path is provided and file exists
               if [ -n "${{ github.event.inputs.config-file-path }}" ]; then
                 yamllint -c "${{ github.workspace }}/${{ github.event.inputs.config-file-path }}" "$file"
               else
-                yamllint "$file"
+                yamllint -c github-workflows/.yamllint.yml "$file"
               fi
             fi
           done
