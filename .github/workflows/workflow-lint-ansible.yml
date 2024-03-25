@@ -1,0 +1,22 @@
+name: Ansible Workflow
+
+on:
+  workflow_call:
+    inputs:
+      ansible-lint-file:
+        required: true
+        type: string
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Installation d'Ansible
+        run: sudo apt install ansible
+
+      - name: Linting Ansible Playbooks
+        run: ansible-lint -c ${{ github.event.inputs.ansible-lint-file }}"
