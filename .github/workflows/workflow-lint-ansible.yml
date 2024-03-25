@@ -17,11 +17,5 @@ jobs:
       - name: Install ansible and ansible-lint
         run: sudo apt install -y ansible ansible-lint
 
-      - name: Read ansible-lint-config file
-        id: read-config
-        run: |
-          config=$(cat ${{ github.workspace }}/${{ inputs.ansible-lint-config }})
-          echo "::set-output name=config::$config"
-
       - name: Run ansible-lint
-        run: ansible-lint -c ${{ steps.read-config.outputs.config }}
+        run: ansible-lint -c ${{ github.workspace }}/${{ inputs.ansible-lint-config }}
