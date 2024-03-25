@@ -6,7 +6,6 @@ on:
       ansible-lint-file:
         required: true
         type: string
-  push:
 
 jobs:
   build:
