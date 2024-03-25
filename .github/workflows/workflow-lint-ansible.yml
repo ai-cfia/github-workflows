@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Installation d'Ansible
-        run: sudo apt install ansible
+      - name: Install ansible and ansible-lint
+        run: sudo apt install -y ansible ansible-lint
 
-      - name: Linting Ansible Playbooks
+      - name: Run ansible-lint
         run: ansible-lint -c ${{ github.event.inputs.ansible-lint-file }}
