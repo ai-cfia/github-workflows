@@ -6,6 +6,10 @@ on:
       ansible-lint-config:
         required: true
         type: string
+      python-version:
+        required: false
+        type: string
+        default: '3.9'
 
 jobs:
   build:
@@ -14,8 +18,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '${{ inputs.python-version }}'
+
       - name: Install ansible and ansible-lint
-        run: sudo apt install -y ansible ansible-lint
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint
 
       - name: Debug
         run: ls -la ${{ github.workspace }}
