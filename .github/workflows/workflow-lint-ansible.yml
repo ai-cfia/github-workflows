@@ -17,5 +17,8 @@ jobs:
       - name: Install ansible and ansible-lint
         run: sudo apt install -y ansible ansible-lint
 
+      - name: Debug
+        run: ls -la ${{ github.workspace }}
+
       - name: Run ansible-lint
         run: ansible-lint -c ${{ github.workspace }}/${{ inputs.ansible-lint-config }} ${{ github.workspace }}
