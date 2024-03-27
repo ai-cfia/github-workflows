@@ -37,7 +37,7 @@ jobs:
           pip install ansible ansible-lint ansible-vault
 
       - name: Create the ansible vault password file
-        run: echo -n "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > ${{ github.workspace }}/.ansible_vault_password.txt
+        run: echo '${{ secrets.ANSIBLE_VAULT_PASSWORD }}' > ${{ github.workspace }}/.ansible_vault_password.txt
 
       - name: Decrypt variables
         if: ${{ inputs.ansible-variable-file != '' }}
