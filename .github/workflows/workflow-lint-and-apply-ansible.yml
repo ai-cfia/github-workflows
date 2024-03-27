@@ -55,5 +55,4 @@ jobs:
         run: ansible-lint -c ${{ github.workspace }}/${{ inputs.ansible-lint-config }} ${{ github.workspace }}
 
       - name: Run ansible-playbook
-        if: steps.ansible-lint.exitcode == 0
         run: ansible-playbook -i ${{ github.workspace }}/${{ inputs.ansible-inventory-file }} ${{ github.workspace }}/${{ inputs.ansible-playbook-file }}
