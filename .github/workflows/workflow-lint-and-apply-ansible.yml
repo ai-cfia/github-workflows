@@ -6,10 +6,9 @@ on:
       ansible-lint-config:
         required: true
         type: string
-      python-version:
-        required: false
+      ansible-playbook-file:
+        required: true
         type: string
-        default: '3.9'
       ansible-variable-file:
         required: false
         type: string
@@ -18,9 +17,10 @@ on:
         required: false
         type: string
         default: ''
-      ansible-playbook-file:
-        required: true
+      python-version:
+        required: false
         type: string
+        default: '3.9'
 
 jobs:
   ansible-lint-and-apply:
