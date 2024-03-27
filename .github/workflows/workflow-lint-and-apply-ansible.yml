@@ -18,9 +18,12 @@ on:
         required: false
         type: string
         default: ''
+      ansible-playbook-file:
+        required: true
+        type: string
 
 jobs:
-  build:
+  ansible-lint-and-apply:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,10 +34,10 @@ jobs:
         with:
           python-version: '${{ inputs.python-version }}'
 
-      - name: Install ansible, ansible-lint and ansible-vault
+      - name: Install ansible, ansible-lint, ansible-vault and ansible-playbook
         run: |
           python -m pip install --upgrade pip
-          pip install ansible ansible-lint ansible-vault
+          pip install ansible ansible-lint ansible-vault ansible-playbook
 
       - name: Create the ansible vault password file
         run: echo '${{ secrets.ANSIBLE_VAULT_PASSWORD }}' > ${{ github.workspace }}/.ansible_vault_password.txt
@@ -48,4 +51,9 @@ jobs:
         run: ansible-vault decrypt --vault-password-file .ansible_vault_password.txt ${{ github.workspace }}/${{ inputs.ansible-inventory-file }}
 
       - name: Run ansible-lint
+        id: ansible-lint
         run: ansible-lint -c ${{ github.workspace }}/${{ inputs.ansible-lint-config }} ${{ github.workspace }}
+
+      - name: Run ansible-playbook
+        if: steps.ansible-lint.exitcode == 0
+        run: ansible-playbook -i ${{ github.workspace }}/${{ inputs.ansible-inventory-file }} ${{ github.workspace }}/${{ inputs.ansible-playbook-file }}

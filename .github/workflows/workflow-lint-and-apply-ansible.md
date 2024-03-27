@@ -1,7 +1,9 @@
 # Reusable Workflow for Ansible Linting
 
 - **Purpose:** Improve the quality of Ansible projects by implementing a
-reusable linting workflow.
+reusable linting workflow. If the ansible-lint command pass, the workflow will
+run an `ansible-playbook` command and apply the specified
+`ansible-playbook-file`.
 - **Usage:** Integrate this workflow into your Ansible projects for efficient
 linting processes.
 - **Note:** Provide an ansible-lint configuration file using the
