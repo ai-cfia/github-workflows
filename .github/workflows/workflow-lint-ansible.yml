@@ -10,6 +10,14 @@ on:
         required: false
         type: string
         default: '3.9'
+      ansible-variable-file:
+        required: false
+        type: string
+        default: ''
+      ansible-inventory-file:
+        required: false
+        type: string
+        default: ''
 
 jobs:
   build:
@@ -23,10 +31,21 @@ jobs:
         with:
           python-version: '${{ inputs.python-version }}'
 
-      - name: Install ansible and ansible-lint
+      - name: Install ansible, ansible-lint and ansible-vault
         run: |
           python -m pip install --upgrade pip
-          pip install ansible ansible-lint
+          pip install ansible ansible-lint ansible-vault
+
+      - name: Create the ansible vault password file
+        run: echo -n "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > ${{ github.workspace }}/.ansible_vault_password.txt
+
+      - name: Decrypt variables
+        if: ${{ inputs.ansible-variable-file != '' }}
+        run: ansible-vault decrypt --vault-password-file .ansible_vault_password.txt ${{ github.workspace }}/${{ inputs.ansible-variable-file }}
+
+      - name: Decrypt inventory
+        if: ${{ inputs.ansible-inventory-file != '' }}
+        run: ansible-vault decrypt --vault-password-file .ansible_vault_password.txt ${{ github.workspace }}/${{ inputs.ansible-inventory-file }}
 
       - name: Run ansible-lint
         run: ansible-lint -c ${{ github.workspace }}/${{ inputs.ansible-lint-config }} ${{ github.workspace }}

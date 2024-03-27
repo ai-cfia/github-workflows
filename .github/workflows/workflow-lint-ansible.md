@@ -1,5 +1,11 @@
 # Reusable Workflow for Ansible Linting
 
-- **Purpose:** Enhances the quality of Ansible projects by providing a reusable linting workflow.
-- **Usage:** Integrate this workflow into your Ansible projects to streamline linting processes.
-- **Note:** Pass an ansible-lint-file configuration file to the `ansible-lint-file` variable
+- **Purpose:** Improve the quality of Ansible projects by implementing a
+reusable linting workflow.
+- **Usage:** Integrate this workflow into your Ansible projects for efficient
+linting processes.
+- **Note:** Provide an ansible-lint configuration file using the
+`ansible-lint-config` input variable. Optionally, you can specify Python version
+with the `python-version` input. Additionally, you may decrypt ansible variable
+and inventory file by passing the name through the `ansible-variable-file`
+and `ansible-inventory-file` inputs respectively.
