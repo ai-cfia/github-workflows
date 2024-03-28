@@ -47,3 +47,6 @@ jobs:
                   PGPASSWORD: ${{ secrets.PGPASSWORD }}
                   PGPORT: ${{ secrets.PGPORT }}
                   PGUSER: ${{ secrets.PGUSER }}
+                  BING_SEARCH_KEY: ${{ secrets.BING_SEARCH_KEY }}
+                  BING_ENDPOINT: ${{ secrets.BING_ENDPOINT }}
+                  NAHCET_SCHEMA: ${{ secrets.NAHCET_SCHEMA }}
