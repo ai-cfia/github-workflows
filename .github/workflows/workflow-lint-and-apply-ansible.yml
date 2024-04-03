@@ -54,8 +54,15 @@ jobs:
         id: ansible-lint
         run: ansible-lint -c ${{ github.workspace }}/${{ inputs.ansible-lint-config }} ${{ github.workspace }}
 
-      - name: Create the ssh private key file
-        run: echo '${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}' > ${{ github.workspace }}/private_key
+      - name: Setup SSH
+        shell: bash
+        run: |
+          eval `ssh-agent -s`
+          mkdir -p /home/runner/.ssh/
+          touch /home/runner/.ssh/id_rsa
+          echo -e "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
+          chmod 700 /home/runner/.ssh/id_rsa
+          ssh-keyscan -t rsa,dsa,ecdsa,ed25519 ${{ secrets.ANSIBLE_SSH_HOST }} >> /home/runner/.ssh/known_hosts
 
       - name: Run ansible-playbook
-        run: ansible-playbook --private-key private_key -i ${{ github.workspace }}/${{ inputs.ansible-inventory-file }} ${{ github.workspace }}/${{ inputs.ansible-playbook-file }}
+        run: ansible-playbook --private-key /home/runner/.ssh/id_rsa -i ${{ github.workspace }}/${{ inputs.ansible-inventory-file }} ${{ github.workspace }}/${{ inputs.ansible-playbook-file }}
