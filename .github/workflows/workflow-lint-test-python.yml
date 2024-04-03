@@ -49,5 +49,5 @@ jobs:
                   PGUSER: ${{ secrets.PGUSER }}
                   BING_SEARCH_KEY: ${{ secrets.BING_SEARCH_KEY }}
                   BING_ENDPOINT: ${{ secrets.BING_ENDPOINT }}
-                  NAHCET_SCHEMA: ${{ secrets.NAHCET_SCHEMA }}
+                  NACHET_SCHEMA: ${{ secrets.NACHET_SCHEMA }}
                   NACHET_DB_URL: ${{ secrets.NACHET_DB_URL }}
