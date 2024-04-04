@@ -9,5 +9,5 @@ linting processes.
 - **Note:** Provide an ansible-lint configuration file using the
 `ansible-lint-config` input variable. Optionally, you can specify Python version
 with the `python-version` input. Additionally, you may decrypt ansible variable
-and inventory file by passing the name through the `ansible-variable-file`
-and `ansible-inventory-file` inputs respectively.
+and inventory file by passing the name through the `ansible-variable-file` and
+`ansible-inventory-file` inputs respectively.
