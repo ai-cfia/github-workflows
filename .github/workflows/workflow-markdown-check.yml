@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
       - name: Validating links
         uses: gaurav-nelson/github-action-markdown-link-check@v1
@@ -25,7 +23,8 @@ jobs:
 
       - name: Run markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v14
-        with:
-          fix: true
         # Run step even if previous steps fail.
         if: always()
+        with:
+          globs: '**/*.md'
+          config: .markdownlint.json
