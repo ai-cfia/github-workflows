@@ -25,7 +25,7 @@ jobs:
         with:
           repository: ai-cfia/github-workflows
           path: github-workflows
-          ref: main
+          ref: 89-fix-option-to-markdown-check-does-nothing-and-may-be-hiding-actual-errors
           sparse-checkout: |
             .markdownlint.json
             .mlc_config.json
@@ -37,7 +37,7 @@ jobs:
           if [ -z "${{ inputs.md-link-config-file-path }}" ]; then
             echo "::set-output name=link_config_path::github-workflows/.mlc_config.json"
           else
-            echo "::set-output name=link_config_path::${{ github.workspace }}/${{ inputs.md-link-config-file-path }}"
+            echo "::set-output name=link_config_path::${{ inputs.md-link-config-file-path }}"
           fi
 
       - name: Determine markdown lint config file
@@ -46,7 +46,7 @@ jobs:
           if [ -z "${{ inputs.md-lint-config-file-path }}" ]; then
             echo "::set-output name=lint_config_path::github-workflows/.markdownlint.json"
           else
-            echo "::set-output name=lint_config_path::${{ github.workspace }}/${{ inputs.md-lint-config-file-path }}"
+            echo "::set-output name=lint_config_path::${{ inputs.md-lint-config-file-path }}"
           fi
 
       - name: Validating links
@@ -59,4 +59,4 @@ jobs:
         if: always()
         with:
           globs: '**/*.md'
-          config: ${{ steps.lintconfig.outputs.lint_config_path }}
+          config: ${{ github.workspace }}/${{ steps.lintconfig.outputs.lint_config_path }}
