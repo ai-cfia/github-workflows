@@ -49,13 +49,11 @@ jobs:
             echo "::set-output name=lint_config_path::${{ github.workspace }}/${{ inputs.md-lint-config-file-path }}"
           fi
 
-      # Validating links with the determined config
       - name: Validating links
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           config-file: ${{ steps.linkconfig.outputs.link_config_path }}
 
-      # Run markdown lint with the determined config
       - name: Run markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v14
         if: always()
