@@ -1,31 +1,62 @@
----
 name: Check Markdown conformance to AI Lab standards
 
 on:
   workflow_call:
     inputs:
-      config-file-path:
+      md-link-config-file-path:
+        required: false
+        type: string
+      md-lint-config-file-path:
         required: false
         type: string
   push:
 
 jobs:
-  markdown-link-check:
+  markdown-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Checkout reusable workflows repository for default configs if needed
+      - name: Checkout default configs
+        if: inputs.md-link-config-file-path == '' || inputs.md-lint-config-file-path == ''
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          repository: ai-cfia/github-workflows
+          path: github-workflows
+          ref: 89-fix-option-to-markdown-check-does-nothing-and-may-be-hiding-actual-errors
+          sparse-checkout: |
+            .markdownlint.json
+            .mlc_config.json
+          sparse-checkout-cone-mode: false
+
+      - name: Determine markdown link config file
+        id: linkconfig
+        run: |
+          if [ -z "${{ inputs.md-link-config-file-path }}" ]; then
+            echo "::set-output name=link_config_path::github-workflows/.mlc_config.json"
+          else
+            echo "::set-output name=link_config_path::${{ inputs.md-link-config-file-path }}"
+          fi
+
+      - name: Determine markdown lint config file
+        id: lintconfig
+        run: |
+          if [ -z "${{ inputs.md-lint-config-file-path }}" ]; then
+            echo "::set-output name=lint_config_path::github-workflows/.markdownlint.json"
+          else
+            echo "::set-output name=lint_config_path::${{ inputs.md-lint-config-file-path }}"
+          fi
 
       - name: Validating links
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
-          config-file: '${{ inputs.config-file-path }}'
+          config-file: ${{ steps.linkconfig.outputs.link_config_path }}
 
       - name: Run markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v14
-        with:
-          fix: true
-        # Run step even if previous steps fail.
         if: always()
+        with:
+          globs: '**/*.md'
+          config: ${{ github.workspace }}/${{ steps.lintconfig.outputs.lint_config_path }}

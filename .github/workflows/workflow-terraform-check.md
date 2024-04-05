@@ -19,7 +19,7 @@ various projects.
   - **TFLint Check:** Runs TFLint to lint Terraform files, identifying potential
     issues and deviations from best practices.
 - **Input:** Optionally specify a custom configuration file path for TFLint to
-  use a specific set of rules. 
+  use a specific set of rules.
 
 ## Terraform Linting Guidelines for Developers
 
@@ -34,4 +34,4 @@ set, you can create a `.tflint.hcl` file in your project's root directory.
 Specify the path to this file when triggering the workflow to apply your custom
 rules. The format and options for this configuration file are documented in the
 [TFLint Configuration File Format]
-(https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/config.md).
+(<https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/config.md>).
