@@ -17,22 +17,22 @@ jobs:
           pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
           repository=`echo $GITHUB_REPOSITORY`
           request_body=$(jq -n \
-          --arg repositoryId "$repository" \
-          --arg pullRequestId $pull_number \
-          --arg webURL "$GITHUB_SERVER_URL" \
-          '$ARGS.named')
+            --arg repositoryId "$repository" \
+            --arg pullRequestId $pull_number \
+            --arg webURL "$GITHUB_SERVER_URL" \
+            '$ARGS.named')
 
           response=$(curl -s -w "%{http_code}" -X POST $API \
-          -H "X-SQL-Review-Token: $TOKEN" \
-          -H "Content-Type: application/json" \
-          -d "$request_body")
+            -H "X-SQL-Review-Token: $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$request_body")
           echo "::debug::response $response"
 
           http_code=$(tail -n1 <<< "$response")
           body=$(sed '$ d' <<< "$response")
 
           if [ $http_code != 200 ]; then
-          echo ":error::Failed to check SQL with response code $http_code and body $body"
+            echo ":error::Failed to check SQL with response code $http_code and body $body"
           exit 1
           fi
 
@@ -40,7 +40,7 @@ jobs:
           content=$(echo $body | jq -r '.content')
 
           while read message; do
-          echo $message
+            echo $message
           done <<< "$(echo $content | jq -r '.[]')"
 
           if [ "$status" != "SUCCESS" ]; then exit 1; fi
