@@ -1,16 +1,18 @@
----
 name: Check Markdown conformance to AI Lab standards
 
 on:
   workflow_call:
     inputs:
-      config-file-path:
+      md-link-config-file-path:
+        required: false
+        type: string
+      md-lint-config-file-path:
         required: false
         type: string
   push:
 
 jobs:
-  markdown-link-check:
+  markdown-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,7 +21,27 @@ jobs:
       - name: Validating links
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
-          config-file: '${{ inputs.config-file-path }}'
+          config-file: '${{ inputs.md-link-config-file-path }}'
+
+      - name: Checkout reusable workflows repository if custom config not provided
+        if: inputs.md-lint-config-file-path == ''
+        uses: actions/checkout@v4
+        with:
+          repository: ai-cfia/github-workflows
+          path: github-workflows
+          ref: main
+          sparse-checkout: |
+            .markdownlint.json
+          sparse-checkout-cone-mode: false
+
+      - name: Determine markdown lint config file
+        id: lintconfig
+        run: |
+          if [ -z "${{ inputs.md-lint-config-file-path }}" ]; then
+            echo "::set-output name=config_path::github-workflows/.markdownlint.json"
+          else
+            echo "::set-output name=config_path::${{ github.workspace }}/${{ inputs.md-lint-config-file-path }}"
+          fi
 
       - name: Run markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v14
@@ -27,4 +49,4 @@ jobs:
         if: always()
         with:
           globs: '**/*.md'
-          config: .markdownlint.json
+          config: ${{ steps.lintconfig.outputs.config_path }}
