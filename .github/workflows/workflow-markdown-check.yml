@@ -35,7 +35,7 @@ jobs:
         id: linkconfig
         run: |
           if [ -z "${{ inputs.md-link-config-file-path }}" ]; then
-            echo "::set-output name=link_config_path::.mlc_config.json"
+            echo "::set-output name=link_config_path::github-workflows/.mlc_config.json"
           else
             echo "::set-output name=link_config_path::${{ github.workspace }}/${{ inputs.md-link-config-file-path }}"
           fi
@@ -44,7 +44,7 @@ jobs:
         id: lintconfig
         run: |
           if [ -z "${{ inputs.md-lint-config-file-path }}" ]; then
-            echo "::set-output name=lint_config_path::.markdownlint.json"
+            echo "::set-output name=lint_config_path::github-workflows/.markdownlint.json"
           else
             echo "::set-output name=lint_config_path::${{ github.workspace }}/${{ inputs.md-lint-config-file-path }}"
           fi
