@@ -17,4 +17,5 @@ pull request to the `main` branch of the calling repository.
 
 Side note : The API key and secret can be regenerated from the Bytebase instance
 through the creation of a service account following
-<https://www.bytebase.com/docs/api/authentication/>
+<https://www.bytebase.com/docs/api/authentication/>. Once created, the API key
+can be used as a secret to authenticate with the SQL review service.
