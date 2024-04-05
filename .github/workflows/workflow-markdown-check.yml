@@ -38,7 +38,7 @@ jobs:
         id: lintconfig
         run: |
           if [ -z "${{ inputs.md-lint-config-file-path }}" ]; then
-            echo "::set-output name=config_path::github-workflows/.markdownlint.json"
+            echo "::set-output name=config_path::.markdownlint.json"
           else
             echo "::set-output name=config_path::${{ github.workspace }}/${{ inputs.md-lint-config-file-path }}"
           fi
