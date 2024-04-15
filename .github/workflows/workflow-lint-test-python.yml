@@ -35,12 +35,12 @@ jobs:
               id: import-secrets
               uses: hashicorp/vault-action@v2
               with:
-                url: https://vault.inspection.alpha.canada.ca:8200
-                method: github
-                githubToken: ${{ secrets.VAULT_TOKEN }}
-                caCertificate: ${{ secrets.VAULT_CA_CERT }}
-                secrets: |
-                    kv/data/github-workflows/python-lint-workflow *
+                  url: https://vault.inspection.alpha.canada.ca:8200
+                  method: github
+                  githubToken: ${{ secrets.VAULT_TOKEN }}
+                  caCertificate: ${{ secrets.VAULT_CA_CERT }}
+                  secrets: |
+                      kv/data/github-workflows/python-lint-workflow *
 
             - name: Step following 'Import Secrets'
               run: |
