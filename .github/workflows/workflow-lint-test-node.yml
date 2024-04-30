@@ -16,7 +16,7 @@ jobs:
                   cache: npm
                   node-version-file: "package.json"
             - name: install npm
-              run: npm install -g npm@9.8.1
+              run: npm install
             - name: install dependencies
               run: npm install
             - name: Run ESLint
