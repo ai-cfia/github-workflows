@@ -56,10 +56,14 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: ${{ runner.os }}-buildx
 
-      - name: Extract branch name
+      - name: Extract branch name + remove undesired characters
         shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch_name
+        run: |
+          BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          CLEAN_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/\\]/-/g')
+          echo "clean_branch_name=$CLEAN_BRANCH_NAME" >> $GITHUB_ENV
+          echo "::set-output name=clean_branch_name::$CLEAN_BRANCH_NAME"
 
       - name: Build and push (3 tags | commit number, pr number and branch name) (unmerged)
         id: docker_build_and_tag_unmerged
@@ -71,7 +75,7 @@ jobs:
           tags: |
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.number }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
-            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.branch }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.clean_branch_name }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
