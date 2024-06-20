@@ -33,8 +33,11 @@ jobs:
 
             - name: Set secrets environment variables
               run: |
-                for secret_name in $(echo '${{ toJSON(secrets) }}' | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]'); do
-                  export $secret_name
+                echo '${{ toJSON(secrets) }}' | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' | while read -r secret; do
+                  # Only export valid key-value pairs
+                  if [[ $secret =~ ^[a-zA-Z_][a-zA-Z0-9_]*=.*$ ]]; then
+                    export "$secret"
+                  fi
                 done
 
             - name: Test with unittest
