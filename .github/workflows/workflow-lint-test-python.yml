@@ -33,7 +33,7 @@ jobs:
 
             - name: Set secrets environment variables
               run: |
-                for secret_name in $(jq -r `to_entries|map("\"\(.key)=\(.value|tostring)\"")|.[]` <<< ${{ toJSON(secrets) }}); do
+                for secret_name in $(echo '${{ toJSON(secrets) }}' | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]'); do
                   export $secret_name
                 done
 
