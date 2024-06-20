@@ -31,13 +31,10 @@ jobs:
                 # default set of ruff rules with GitHub Annotations
                 ruff --output-format=github --target-version=py311 .
 
-            - name: Test with unittest
+            - uses: oNaiPs/secrets-to-env-action@v1
+              with:
+                secrets: ${{ toJSON(secrets) }}
+
+            - name:
               run: |
-                # Set environment variables from secrets
-                echo '${{ toJSON(secrets) }}' | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' | while read -r secret; do
-                  # Only export valid key-value pairs
-                  if [[ $secret =~ ^[a-zA-Z_][a-zA-Z0-9_]*=.*$ ]]; then
-                    export "$secret"
-                  fi
-                done
                 python -m unittest discover -s tests
