@@ -31,23 +31,10 @@ jobs:
                 # default set of ruff rules with GitHub Annotations
                 ruff --output-format=github --target-version=py311 .
 
+            - uses: oNaiPs/secrets-to-env-action@v1
+              with:
+                  secrets: ${{ toJSON(secrets) }}
+
             - name: Test with unittest
               run: |
                 python -m unittest discover -s tests
-              env:
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-                  LOUIS_DSN: ${{ secrets.LOUIS_DSN }}
-                  LOUIS_SCHEMA: ${{ secrets.LOUIS_SCHEMA }}
-                  AZURE_OPENAI_SERVICE: ${{ secrets.AZURE_OPENAI_SERVICE }}
-                  FINESSE_WEIGHTS: ${{ secrets.FINESSE_WEIGHTS }}
-                  OPENAI_API_ENGINE: ${{ secrets.OPENAI_API_ENGINE }}
-                  OPENAI_ENDPOINT: ${{ secrets.OPENAI_ENDPOINT }}
-                  PGDATABASE: ${{ secrets.PGDATABASE }}
-                  PGHOST: ${{ secrets.PGHOST }}
-                  PGPASSWORD: ${{ secrets.PGPASSWORD }}
-                  PGPORT: ${{ secrets.PGPORT }}
-                  PGUSER: ${{ secrets.PGUSER }}
-                  BING_SEARCH_KEY: ${{ secrets.BING_SEARCH_KEY }}
-                  BING_ENDPOINT: ${{ secrets.BING_ENDPOINT }}
-                  NACHET_SCHEMA: ${{ secrets.NACHET_SCHEMA }}
-                  NACHET_DB_URL: ${{ secrets.NACHET_DB_URL }}

@@ -2,7 +2,14 @@
 
 - **Purpose:** Lint and test Python packages.
 - **Usage:** Call this workflow in your Python projects.
-- **Required Secrets:**
-  - `OPENAI_API_KEY`: API key for OpenAI (if utilized in tests).
-  - `LOUIS_DSN` and `LOUIS_SCHEMA`: Database credentials (if utilized in tests).
-  - `AZURE_OPENAI_SERVICE`: Azure OpenAI service credentials (if utilized).
+- **Required Secrets:** Simply call the workflow in your project and pass
+  the secrets by inheritance. To add, remove or update secrets, please do so
+  in your repository's secrets settings.
+  ex :
+
+  ```yaml
+  lint-test:
+    uses:
+      ai-cfia/github-workflows/.github/workflows/workflow-lint-test-python.yml@main
+    secrets: inherit
+  ```
