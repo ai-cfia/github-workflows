@@ -35,6 +35,6 @@ jobs:
               with:
                 secrets: ${{ toJSON(secrets) }}
 
-            - name:
+            - name: Test with unittest
               run: |
                 python -m unittest discover -s tests

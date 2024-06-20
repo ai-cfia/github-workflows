@@ -3,7 +3,8 @@
 - **Purpose:** Lint and test Python packages.
 - **Usage:** Call this workflow in your Python projects.
 - **Required Secrets:** Simply call the workflow in your project and pass
-  the secrets by inheritance.
+  the secrets by inheritance. To add, remove or update secrets, please do so
+  in your repository's secrets settings.
   ex :
 
   ```yaml
