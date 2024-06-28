@@ -30,6 +30,7 @@ jobs:
                 if [ -f requirements.txt ]; then \
                   pip install -r requirements.txt; \
                 fi
+                pip install pytest pytest-cov # for coverage
             - name: Lint with ruff
               run: |
                 # stop the build if there are Python syntax errors or undefined
@@ -46,3 +47,9 @@ jobs:
             - name: Test with unittest
               run: |
                 python -m unittest discover -s tests
+
+            - name: Run tests with coverage
+              run: |
+                pytest --cov=. --cov-fail-under=${{ inputs.threshold }} tests/
+              env:
+                THRESHOLD: 80 # default value, coverage must be at least 80%
