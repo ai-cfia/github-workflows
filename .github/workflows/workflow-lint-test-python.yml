@@ -21,8 +21,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-            python-version: '3.11.x'
-            cache: 'pip'
+          python-version: '3.11.x'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -44,7 +44,7 @@ jobs:
 
       - uses: oNaiPs/secrets-to-env-action@v1
         with:
-            secrets: ${{ toJSON(secrets) }}
+          secrets: ${{ toJSON(secrets) }}
 
       - name: Test with unittest
         run: |
@@ -54,4 +54,4 @@ jobs:
         run: |
           pytest --cov=. --cov-fail-under=${{ inputs.threshold }} tests/
         env:
-          THRESHOLD: 80 # default value, coverage must be at least 80%
+          THRESHOLD: 95 # default value, coverage must be at least 80%
