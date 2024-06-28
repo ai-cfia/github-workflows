@@ -52,6 +52,4 @@ jobs:
 
       - name: Run tests with coverage (coverage must be at least 80% to pass)
         run: |
-          pytest --cov=. --cov-fail-under=${{ inputs.threshold }} tests/
-        env:
-          THRESHOLD: 80 # default value, coverage must be at least 80%
+          pytest --cov=. --cov-fail-under=80 tests/ # default value, coverage must be at least 80%
