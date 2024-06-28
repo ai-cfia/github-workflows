@@ -13,43 +13,39 @@ permissions:
   pull-requests: write
 
 jobs:
-    lint-test:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v3
-            - name: Set up Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: '3.11.x'
-                  cache: 'pip'
-            - name: Install dependencies
-              run: |
-                python -m pip install --upgrade pip
-                pip install ruff==0.1.0
-                if [ -f requirements.txt ]; then \
-                  pip install -r requirements.txt; \
-                fi
-                pip install pytest pytest-cov # for coverage
-            - name: Lint with ruff
-              run: |
-                # stop the build if there are Python syntax errors or undefined
-                # names
-                ruff --output-format=github --select=E9,F63,F7,F82 \
-                  --target-version=py311 .
-                # default set of ruff rules with GitHub Annotations
-                ruff --output-format=github --target-version=py311 .
-
-            - uses: oNaiPs/secrets-to-env-action@v1
-              with:
-                  secrets: ${{ toJSON(secrets) }}
-
-            - name: Test with unittest
-              run: |
-                python -m unittest discover -s tests
-
-            - name: Run tests with coverage
-              run: |
-                pytest --cov=. --cov-fail-under=${{ inputs.threshold }} tests/
-              env:
-                THRESHOLD: 80 # default value, coverage must be at least 80%
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: '3.11.x'
+            cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff==0.1.0
+          if [ -f requirements.txt ]; then \
+            pip install -r requirements.txt; \
+          fi
+          pip install pytest pytest-cov # for coverage
+      - name: Lint with ruff
+        run: |
+          # stop the build if there are Python syntax errors or undefined
+          # names
+          ruff --output-format=github --select=E9,F63,F7,F82 \
+            --target-version=py311 .
+          # default set of ruff rules with GitHub Annotations
+          ruff --output-format=github --target-version=py311 .
+      - uses: oNaiPs/secrets-to-env-action@v1
+        with:
+            secrets: ${{ toJSON(secrets) }}
+      - name: Test with unittest
+        run: |
+          python -m unittest discover -s tests
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=. --cov-fail-under=${{ inputs.threshold }} tests/
+        env:
+          THRESHOLD: 80 # default value, coverage must be at least 80%
