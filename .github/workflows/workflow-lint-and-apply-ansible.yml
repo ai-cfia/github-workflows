@@ -1,0 +1,68 @@
+name: Ansible Workflow
+
+on:
+  workflow_call:
+    inputs:
+      ansible-lint-config:
+        required: true
+        type: string
+      ansible-playbook-file:
+        required: true
+        type: string
+      ansible-variable-file:
+        required: false
+        type: string
+        default: ''
+      ansible-inventory-file:
+        required: false
+        type: string
+        default: ''
+      python-version:
+        required: false
+        type: string
+        default: '3.9'
+
+jobs:
+  ansible-lint-and-apply:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '${{ inputs.python-version }}'
+
+      - name: Install ansible and ansible-lint
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint
+
+      - name: Create the ansible vault password file
+        run: echo '${{ secrets.ANSIBLE_VAULT_PASSWORD }}' > ${{ github.workspace }}/.ansible_vault_password.txt
+
+      - name: Decrypt variables
+        if: ${{ inputs.ansible-variable-file != '' }}
+        run: ansible-vault decrypt --vault-password-file .ansible_vault_password.txt ${{ github.workspace }}/${{ inputs.ansible-variable-file }}
+
+      - name: Decrypt inventory
+        if: ${{ inputs.ansible-inventory-file != '' }}
+        run: ansible-vault decrypt --vault-password-file .ansible_vault_password.txt ${{ github.workspace }}/${{ inputs.ansible-inventory-file }}
+
+      - name: Run ansible-lint
+        id: ansible-lint
+        run: ansible-lint -c ${{ github.workspace }}/${{ inputs.ansible-lint-config }} ${{ github.workspace }}
+
+      - name: Setup SSH
+        shell: bash
+        run: |
+          eval `ssh-agent -s`
+          mkdir -p /home/runner/.ssh/
+          touch /home/runner/.ssh/id_rsa
+          echo -e "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
+          chmod 700 /home/runner/.ssh/id_rsa
+          ssh-keyscan -t rsa,dsa,ecdsa,ed25519 ${{ secrets.ANSIBLE_SSH_HOST }} >> /home/runner/.ssh/known_hosts
+
+      - name: Run ansible-playbook
+        run: ansible-playbook --private-key /home/runner/.ssh/id_rsa -i ${{ github.workspace }}/${{ inputs.ansible-inventory-file }} ${{ github.workspace }}/${{ inputs.ansible-playbook-file }}

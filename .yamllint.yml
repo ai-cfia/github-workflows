@@ -1,0 +1,9 @@
+---
+extends: default
+
+ignore: |
+  .git/
+
+rules:
+  line-length: disable
+  truthy: disable

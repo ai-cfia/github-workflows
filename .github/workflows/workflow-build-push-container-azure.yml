@@ -1,3 +1,4 @@
+---
 name: Reusable workflow to build and push docker container to Azure
 
 on:
@@ -18,17 +19,17 @@ jobs:
       - name: Login to ACR
         uses: docker/login-action@v2
         with:
-          registry: ${{ secrets.ACR_REGISTRY_NAME }}
+          registry: ${{ secrets.ACR_SERVER }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
-          
+
       # Checkout the current repository.
       - uses: actions/checkout@v3
-      
+
       # Setup Docker Buildx for advanced build features.
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-        
+
       # Cache Docker layers to improve build speed.
       - name: Cache Docker layers
         uses: actions/cache@v2
@@ -37,17 +38,18 @@ jobs:
           key: ${{ runner.os }}-${{inputs.container-name}}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{inputs.container-name}}
-            
+
       # Build and push the Docker image with the specified tag.
       - name: Build and push the Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ${{ secrets.ACR_REGISTRY_NAME }}/${{inputs.container-name}}:${{inputs.tag}}
+          tags: >-
+            ${{ secrets.ACR_SERVER }}/${{inputs.container-name}}:${{inputs.tag}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-          
+
       # Cleanup and move cache for future builds.
       - name: Move cache
         run: |
