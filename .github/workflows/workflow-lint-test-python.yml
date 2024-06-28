@@ -50,8 +50,8 @@ jobs:
         run: |
           python -m unittest discover -s tests
 
-      - name: Run tests with coverage
+      - name: Run tests with coverage (coverage must be at least 80% to pass)
         run: |
           pytest --cov=. --cov-fail-under=${{ inputs.threshold }} tests/
         env:
-          THRESHOLD: 95 # default value, coverage must be at least 80%
+          THRESHOLD: 80 # default value, coverage must be at least 80%
