@@ -3,10 +3,6 @@ name: Reusable lint and test workflow for Python projects
 
 on:
   workflow_call:
-    inputs:
-      threshold:
-        required: true
-        type: number
 
 permissions:
   actions: read
