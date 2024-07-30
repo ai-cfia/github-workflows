@@ -33,7 +33,7 @@ jobs:
 
       - name: Generate Changelog
         id: changelog
-        uses: mikepenz/release-changelog-builder-action@v3
+        uses: mikepenz/release-changelog-builder-action@{latest-release}
         with:
           configurationJson: |
             {
@@ -55,6 +55,7 @@ jobs:
                         "labels": ["*"]
                     }
                 ],
+                "template": "${{CHANGELOG}}\n\nContributors:\n${{CONTRIBUTORS}}",
                 "max_pull_requests": 1000,
                 "max_back_track_time_days": 1000
             }
