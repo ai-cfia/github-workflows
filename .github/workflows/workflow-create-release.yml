@@ -61,7 +61,7 @@ jobs:
             }
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          fromTag: ${{ env.LAST_TAG }}
+          fromTag: "v0.1.1"
           toTag: ${{ env.TAG_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
           
