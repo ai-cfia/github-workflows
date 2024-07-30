@@ -19,18 +19,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Extract tag name
+      - name: Extract current tag name
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-      - name: Get the last tag
+      - name: Fetch all tags
+        run: git fetch --tags
+  
+      - name: Get the previous tag
         id: last_tag
-        run: echo "LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))" >> $GITHUB_ENV
+        run: |
+          PREV_TAG=$(git tag --sort=-creatordate | grep -B1 ${GITHUB_REF#refs/tags/} | head -n 1)
+          echo "LAST_TAG=$PREV_TAG" >> $GITHUB_ENV
 
       - name: Generate Changelog
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v3
         with:
-          configuration: ".github/release.yml"
+          configuration: ".github/release.json"
           owner: "ai-cfia"
           fromTag: ${{ env.LAST_TAG }}
           toTag: ${{ env.TAG_NAME }}
