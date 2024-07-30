@@ -21,19 +21,13 @@ jobs:
 
       - name: Extract current tag name
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Fetch all tags
-        run: git fetch --tags
   
       - name: Get the previous tag
         id: last_tag
         run: |
-          CURRENT_COMMIT=$(git rev-list -n 1 ${GITHUB_REF#refs/tags/})
-          PREV_COMMIT=$(git rev-list --tags --skip=1 --max-count=1 ${CURRENT_COMMIT}^)
-          PREV_TAG=$(git describe --tags $PREV_COMMIT)
-          echo "LAST_TAG=$PREV_TAG" >> $GITHUB_ENV
+          echo "LAST_TAG=$(git tag | tail -n 2 | head -n 1)" >> $GITHUB_ENV
 
-      - name: Generate Changelog
+      - name: Generate changelog
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v5
         with:
