@@ -1,0 +1,101 @@
+name: Create release, build and push to ghcr with specific tag
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        required: true
+        type: string
+      container-name:
+        required: true
+        type: string
+      registry:
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: Create GitHub Release, build and push to ghcr with specific tag
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Extract tag name
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Generate Changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v3
+        with:
+          config: .github/release.yml
+
+      - name: Zip the directory
+        run: |
+          mkdir -p release
+          zip -r release/${{ inputs.package_name }}.zip .
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ inputs.package_name }} (${{ env.TAG_NAME }})
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/${{ inputs.package_name }}.zip
+          asset_name: ${{ inputs.package_name }}.zip
+          asset_content_type: application/zip
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the github container registry (GCR)
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx
+
+      - name: Build and push to ghcr
+        id: docker_build_and_tag_unmerged
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ env.TAG_NAME }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+
+      - name: Refresh Cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Image digest (latest)
+        if: github.event.pull_request.merged == false
+        run: echo ${{ steps.docker_build_and_tag_unmerged.outputs.digest }}
+
+      - name: Image digest (latest)
+        if: github.event.pull_request.merged == true
+        run: echo ${{ steps.docker_build_and_tag_merged.outputs.digest }}
