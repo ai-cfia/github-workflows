@@ -28,7 +28,9 @@ jobs:
       - name: Get the previous tag
         id: last_tag
         run: |
-          PREV_TAG=$(git tag --sort=-creatordate | grep -B1 ${GITHUB_REF#refs/tags/} | head -n 1)
+          CURRENT_COMMIT=$(git rev-list -n 1 ${GITHUB_REF#refs/tags/})
+          PREV_COMMIT=$(git rev-list --tags --skip=1 --max-count=1 ${CURRENT_COMMIT}^)
+          PREV_TAG=$(git describe --tags $PREV_COMMIT)
           echo "LAST_TAG=$PREV_TAG" >> $GITHUB_ENV
 
       - name: Generate Changelog
@@ -61,7 +63,7 @@ jobs:
             }
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          fromTag: "v0.1.1"
+          fromTag: ${{ env.LAST_TAG }}
           toTag: ${{ env.TAG_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
           
