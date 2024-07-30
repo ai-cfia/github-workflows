@@ -3,10 +3,7 @@ name: Create release, build and push to ghcr with specific tag
 on:
   workflow_call:
     inputs:
-      package_name:
-        required: true
-        type: string
-      container-name:
+      artifact-name:
         required: true
         type: string
       registry:
@@ -43,7 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.TAG_NAME }}
-          release_name: Release ${{ inputs.package_name }} (${{ env.TAG_NAME }})
+          release_name: Release ${{ inputs.artifact-name }} (${{ env.TAG_NAME }})
           body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
@@ -54,8 +51,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/${{ inputs.package_name }}.zip
-          asset_name: ${{ inputs.package_name }}.zip
+          asset_path: release/${{ inputs.artifact-name }}.zip
+          asset_name: ${{ inputs.artifact-name }}.zip
           asset_content_type: application/zip
 
       - name: Set up Docker Buildx
@@ -77,13 +74,13 @@ jobs:
           restore-keys: ${{ runner.os }}-buildx
 
       - name: Build and push to ghcr
-        id: docker_build_and_tag_unmerged
+        id: docker_build_push_and_tag
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ env.TAG_NAME }}
+            ${{ inputs.registry }}/${{ inputs.artifact-name }}:${{ env.TAG_NAME }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
@@ -94,8 +91,4 @@ jobs:
 
       - name: Image digest (latest)
         if: github.event.pull_request.merged == false
-        run: echo ${{ steps.docker_build_and_tag_unmerged.outputs.digest }}
-
-      - name: Image digest (latest)
-        if: github.event.pull_request.merged == true
-        run: echo ${{ steps.docker_build_and_tag_merged.outputs.digest }}
+        run: echo ${{ steps.docker_build_push_and_tag.outputs.digest }}
