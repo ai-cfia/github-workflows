@@ -35,7 +35,34 @@ jobs:
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v3
         with:
-          configuration: "release-changelogs.json"
+          configurationJson: |
+            {
+                "template": "#{{CHANGELOG}}",
+                "categories": [
+                    {
+                        "title": "## User stories 👑",
+                        "labels": ["epic"]
+                    },
+                    {
+                        "title": "## New features 🎉",
+                        "labels": ["enhancement", "user-visible"]
+                    },
+                    {
+                        "title": "## Bug fixes 🐛",
+                        "labels": ["bug"]
+                    },
+                    {
+                        "title": "## Other Changes",
+                        "labels": ["*"]
+                    }
+                ],
+                "sort": "ASC",
+                "template": "${{CHANGELOG}}",
+                "pr_template": "- ${{TITLE}}\n   - PR: #${{NUMBER}}",
+                "empty_template": "- no changes",
+                "max_pull_requests": 1000,
+                "max_back_track_time_days": 1000
+            }
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           fromTag: ${{ env.LAST_TAG }}
