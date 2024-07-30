@@ -22,14 +22,6 @@ jobs:
       - name: Extract current tag name
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
   
-      - name: Get the previous tag
-        id: last_tag
-        run: |
-          FOUND_TAG=$(git tag -l "v*" | sort -V --reverse | sed -n 2p)
-          echo "result=${FOUND_TAG}" >> "$GITHUB_OUTPUT"
-          [[ -z "$FOUND_TAG" ]] && echo "No tag found..." || echo "Tag found: ${FOUND_TAG}"
-          echo "LAST_TAG=${FOUND_TAG}" >> $GITHUB_ENV
-
       - name: Generate changelog
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v5
@@ -60,7 +52,6 @@ jobs:
             }
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          fromTag: ${{ env.LAST_TAG }}
           toTag: ${{ env.TAG_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
           
