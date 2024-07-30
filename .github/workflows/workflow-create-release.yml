@@ -37,7 +37,6 @@ jobs:
         with:
           configurationJson: |
             {
-                "template": "#{{CHANGELOG}}",
                 "categories": [
                     {
                         "title": "## User stories 👑",
