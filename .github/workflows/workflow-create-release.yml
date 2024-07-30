@@ -36,9 +36,11 @@ jobs:
         uses: mikepenz/release-changelog-builder-action@v3
         with:
           configuration: ".github/release.json"
-          owner: "ai-cfia"
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
           fromTag: ${{ env.LAST_TAG }}
           toTag: ${{ env.TAG_NAME }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Zip the directory
         run: |
