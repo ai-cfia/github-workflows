@@ -35,7 +35,7 @@ jobs:
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v3
         with:
-          configuration: ".github/release.json"
+          configuration: "release-changelogs.json"
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           fromTag: ${{ env.LAST_TAG }}
