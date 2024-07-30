@@ -25,7 +25,10 @@ jobs:
       - name: Get the previous tag
         id: last_tag
         run: |
-          echo "LAST_TAG=$(git tag | tail -n 2 | head -n 1)" >> $GITHUB_ENV
+          FOUND_TAG=$(git tag -l "${{ inputs.match }}" | sort -V --reverse | sed -n 2p)
+          echo "result=$(echo "${FOUND_TAG}")" >>"$GITHUB_OUTPUT"
+          [[ -z $(echo "$FOUND_TAG") ]] && echo "No tag found..." || echo "Tag found: ${FOUND_TAG}"
+          echo "LAST_TAG=${FOUND_TAG} >> $GITHUB_ENV
 
       - name: Generate changelog
         id: changelog
