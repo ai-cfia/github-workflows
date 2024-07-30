@@ -26,9 +26,9 @@ jobs:
         id: last_tag
         run: |
           FOUND_TAG=$(git tag -l "v*" | sort -V --reverse | sed -n 2p)
-          echo "result=$(echo "${FOUND_TAG}")" >>"$GITHUB_OUTPUT"
-          [[ -z $(echo "$FOUND_TAG") ]] && echo "No tag found..." || echo "Tag found: ${FOUND_TAG}"
-          echo "LAST_TAG=${FOUND_TAG} >> $GITHUB_ENV
+          echo "result=${FOUND_TAG}" >> "$GITHUB_OUTPUT"
+          [[ -z "$FOUND_TAG" ]] && echo "No tag found..." || echo "Tag found: ${FOUND_TAG}"
+          echo "LAST_TAG=${FOUND_TAG}" >> $GITHUB_ENV
 
       - name: Generate changelog
         id: changelog
