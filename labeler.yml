@@ -1,12 +1,10 @@
 documentation:
   - changed-files:
-    - any-glob-to-any-file:
-        - 'docs/*'
-        - '**/*.md'
+    - any-glob-to-any-file: docs/*
 
 tests:
   - changed-files:
-    - any-glob-to-any-file: 'tests/*'
+    - any-glob-to-any-file: tests/*
 
 feature:
  - head-branch: ['^feature', 'feature', '^feat', 'feat']
