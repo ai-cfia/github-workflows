@@ -1,3 +1,4 @@
+---
 name: Create release, build and push to ghcr with specific tag
 
 on:
