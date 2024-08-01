@@ -1,16 +1,23 @@
+root:
+- any:
+  - changed-files:
+    - any-glob-to-any-file: '*'
+
 documentation:
+- any:
   - changed-files:
     - any-glob-to-any-file: docs/*
 
 tests:
+- any:
   - changed-files:
     - any-glob-to-any-file: tests/*
 
 feature:
- - head-branch: ['^feature', 'feature', '^feat', 'feat']
+- head-branch: ['^feature', 'feature', '^feat', 'feat']
 
 bug:
- - head-branch: ['^bug', 'bug', '^fix', 'fix']
+- head-branch: ['^bug', 'bug', '^fix', 'fix']
 
 epic:
- - head-branch: ['^epic', 'epic']
+- head-branch: ['^epic', 'epic']
