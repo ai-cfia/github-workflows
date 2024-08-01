@@ -2,7 +2,7 @@
 name: "Pull request Labeler"
 
 on:
-  workflow_call:
+  - pull_request
 
 jobs:
   labeler:
