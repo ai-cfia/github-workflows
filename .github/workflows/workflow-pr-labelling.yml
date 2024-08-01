@@ -26,4 +26,3 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-number: |
             ${{ github.event.number }}
-            123
