@@ -24,3 +24,5 @@ jobs:
           configuration-path: 'github-workflows/labeler.yml'
           sync-labels: true
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: |
+            ${{ github.event.number }}
