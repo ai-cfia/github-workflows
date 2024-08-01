@@ -21,7 +21,7 @@ jobs:
 
       - name: Extract current tag name
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-  
+
       - name: Generate changelog
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v5
@@ -35,11 +35,15 @@ jobs:
                     },
                     {
                         "title": "## New features 🎉",
-                        "labels": ["enhancement", "user-visible"]
+                        "labels": ["feature"]
                     },
                     {
                         "title": "## Bug fixes 🐛",
                         "labels": ["bug"]
+                    },
+                    {
+                        "title": "## Documentation 📄",
+                        "labels": ["documentation"]
                     },
                     {
                         "title": "## Other Changes 💬",
@@ -54,7 +58,7 @@ jobs:
           repo: ${{ github.event.repository.name }}
           toTag: ${{ env.TAG_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Zip the directory
         run: |
           mkdir -p release

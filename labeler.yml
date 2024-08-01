@@ -1,0 +1,18 @@
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'docs/*'
+        - '**/*.md'
+
+tests:
+  - changed-files:
+    - any-glob-to-any-file: 'tests/*'
+
+feature:
+ - head-branch: ['^feature', 'feature', '^feat', 'feat']
+
+bug:
+ - head-branch: ['^bug', 'bug', '^fix', 'fix']
+
+epic:
+ - head-branch: ['^epic', 'epic']
