@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.pyproject-path != ''
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -76,21 +76,22 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Parse version from pyproject.toml
-        id: parse_version
+      - name: Parse new version from pyproject.toml
+        id: parse_new_version
         run: |
-          version=$(grep -Po '(?<=^version = ")[^"]*' ${{ inputs.pyproject-path }})
-          echo "version=$version" >> $GITHUB_ENV
+          new_version=$(grep -Po '(?<=^version = ")[^"]*' ${{ inputs.pyproject-path }})
+          echo "new_version=$new_version" >> $GITHUB_ENV
 
-      - name: Get latest tag
-        id: get_latest_tag
+      - name: Get latest version
+        id: get_latest_version
         run: |
           latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
-          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+          latest_version=$(echo $latest_tag | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
+          echo "latest_version=$latest_version" >> $GITHUB_ENV
 
       - name: Check version bump
         run: |
-          if [ "$version" == "$latest_tag" ]; then
+          if [ "${{ env.new_version }}" == "${{ env.latest_version }}" ]; then
             echo "Version has not been bumped!"
             exit 1
           else
