@@ -58,33 +58,33 @@ jobs:
           pytest --cov=. --cov-fail-under=80 tests/ # default value, coverage must be at least 80%
 
   version-bump-check:
-      runs-on: ubuntu-latest
-      if: inputs.pyproject-path != ''
-      steps:
-        - uses: actions/checkout@v3
+    runs-on: ubuntu-latest
+    if: inputs.pyproject-path != ''
+    steps:
+      - uses: actions/checkout@v3
 
-        - name: Set up Python
-          uses: actions/setup-python@v4
-          with:
-            python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-        - name: Parse version from pyproject.toml
-          id: parse_version
-          run: |
-            version=$(grep -Po '(?<=^version = ")[^"]*' ${{ inputs.pyproject-path }})
-            echo "version=$version" >> $GITHUB_ENV
+      - name: Parse version from pyproject.toml
+        id: parse_version
+        run: |
+          version=$(grep -Po '(?<=^version = ")[^"]*' ${{ inputs.pyproject-path }})
+          echo "version=$version" >> $GITHUB_ENV
 
-        - name: Get latest tag
-          id: get_latest_tag
-          run: |
-            latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
-            echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
-        - name: Check version bump
-          run: |
-            if [ "$version" == "$latest_tag" ]; then
-              echo "Version has not been bumped!"
-              exit 1
-            else
-              echo "Version has been bumped."
-            fi
+      - name: Check version bump
+        run: |
+          if [ "$version" == "$latest_tag" ]; then
+            echo "Version has not been bumped!"
+            exit 1
+          else
+            echo "Version has been bumped."
+          fi
