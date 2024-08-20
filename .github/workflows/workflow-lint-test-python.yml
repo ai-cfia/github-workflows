@@ -1,4 +1,3 @@
----
 name: Reusable lint and test workflow for Python projects
 
 on:
@@ -10,7 +9,7 @@ on:
       package-name:
         required: false
         type: string
-      test-path:
+      project-path:
         required: false
         type: string
 
@@ -32,19 +31,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+          project_path="${{ inputs.project-path || '.' }}"
           python -m pip install --upgrade pip
           pip install ruff==0.1.0
-          if [ -f requirements.txt ]; then \
-            pip install -r requirements.txt; \
+          if [ -f $project_path/requirements.txt ]; then \
+            pip install -r $project_path/requirements.txt; \
           fi
           pip install pytest pytest-cov # for coverage
 
       - name: Lint with ruff
         run: |
-          # stop the build if there are Python syntax errors or undefined
-          # names
-          ruff --output-format=github --select=E9,F63,F7,F82 \
-            --target-version=py311 .
+          # stop the build if there are Python syntax errors or undefined names
+          ruff --output-format=github --select=E9,F63,F7,F82 --target-version=py311 .
           # default set of ruff rules with GitHub Annotations
           ruff --output-format=github --target-version=py311 .
 
@@ -54,13 +52,13 @@ jobs:
 
       - name: Test with unittest
         run: |
-          test_path="${{ inputs.test-path || 'tests' }}"
-          python -m unittest discover -s $test_path
+          project_path="${{ inputs.project-path || '.' }}"
+          python -m unittest discover -s $project_path/tests
 
       - name: Run tests with coverage (coverage must be at least 80% to pass)
         run: |
-          test_path="${{ inputs.test-path || 'tests' }}"
-          pytest --cov=. --cov-fail-under=80 $test_path # default value, coverage must be at least 80%
+          project_path="${{ inputs.project-path || '.' }}"
+          pytest --cov=. --cov-fail-under=80 $project_path/tests
 
   version-bump-check:
     runs-on: ubuntu-latest
