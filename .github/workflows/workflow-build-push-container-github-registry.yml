@@ -51,7 +51,7 @@ jobs:
       - name: Build and push (3 tags | commit number, pr number and branch name) (unmerged)
         id: docker_build_and_tag_unmerged
         if: github.event.pull_request.merged == false
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
@@ -65,7 +65,7 @@ jobs:
       - name: Build and push (2 tags | commit number and branch name) (merged)
         id: docker_build_and_tag_merged
         if: github.event.pull_request.merged == true
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
