@@ -58,7 +58,7 @@ jobs:
       - name: Run tests with coverage (coverage must be at least 80% to pass)
         run: |
           project_path="${{ inputs.project-path || '.' }}"
-          python -m pytest --cov=. --cov-fail-under=80 $project_path/tests
+          python -m pytest --cov=$project_path --cov-fail-under=80 $project_path/tests
 
   version-bump-check:
     runs-on: ubuntu-latest
