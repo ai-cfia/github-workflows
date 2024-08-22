@@ -63,7 +63,7 @@ jobs:
         if: inputs.skip-coverage != 'true'
         run: |
           project_path="${{ inputs.project-path || '.' }}"
-          python -m pytest --cov=$project_path --cov-fail-under=80 $project_path/tests
+          python -m pytest --cov=. --cov-fail-under=80
 
   version-bump-check:
     runs-on: ubuntu-latest
