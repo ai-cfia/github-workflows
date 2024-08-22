@@ -12,10 +12,10 @@ on:
       project-path:
         required: false
         type: string
-      run-coverage:
+      skip-coverage:
         required: false
-        type: boolean
-        default: true
+        type: string
+        default: 'false'
 
 permissions:
   actions: read
@@ -60,7 +60,7 @@ jobs:
           python -m unittest discover -s $project_path/tests
 
       - name: Run tests with coverage (coverage must be at least 80% to pass)
-        if: inputs.run-coverage == 'true'
+        if: inputs.skip-coverage == 'true'
         run: |
           project_path="${{ inputs.project-path || '.' }}"
           python -m pytest --cov=$project_path --cov-fail-under=80 $project_path/tests
