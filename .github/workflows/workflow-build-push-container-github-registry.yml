@@ -13,6 +13,9 @@ on:
       registry:
         required: true
         type: string
+      dockerfile-folder-path:
+        required: false
+        type: string
 
 jobs:
   build-push-image:
@@ -53,8 +56,9 @@ jobs:
         if: github.event.pull_request.merged == false
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ${{ inputs.dockerfile-folder-path || '.' }}
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.number }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
@@ -67,8 +71,9 @@ jobs:
         if: github.event.pull_request.merged == true
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ${{ inputs.dockerfile-folder-path || '.' }}
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.pull_request.base.ref }}
