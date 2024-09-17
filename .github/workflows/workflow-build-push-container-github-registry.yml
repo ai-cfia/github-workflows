@@ -60,9 +60,9 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.number }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.number || github.run_number }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
-            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.clean_branch_name }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.clean_branch_name || 'latest' }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
