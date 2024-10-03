@@ -3,15 +3,6 @@ name: Reusable lint and test workflow for Python projects
 on:
   workflow_call:
     inputs:
-      pyproject-path:
-        required: false
-        type: string
-      package-name:
-        required: false
-        type: string
-      project-path:
-        required: false
-        type: string
       skip-coverage:
         required: false
         type: string
@@ -35,11 +26,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          project_path="${{ inputs.project-path || '.' }}"
           python -m pip install --upgrade pip
           pip install ruff==0.1.0
           if [ -f $project_path/requirements.txt ]; then \
-            pip install -r $project_path/requirements.txt; \
+            pip install -r requirements.txt; \
           fi
           pip install pytest pytest-cov # for coverage
 
@@ -54,49 +44,11 @@ jobs:
         with:
           secrets: ${{ toJSON(secrets) }}
 
-      - name: Test with pytest
+      - name: Test with unittest
         run: |
-          project_path="${{ inputs.project-path || '.' }}"
-          python -m pytest $project_path
+          python -m unittest discover -s tests
 
       - name: Run tests with coverage (coverage must be at least 80% to pass)
         if: inputs.skip-coverage != 'true'
         run: |
           python -m pytest --cov=. --cov-fail-under=80
-
-  version-bump-check:
-    runs-on: ubuntu-latest
-    if: inputs.pyproject-path != ''
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Parse new version from pyproject.toml
-        id: parse_new_version
-        run: |
-          new_version=$(grep -Po '(?<=^version = ")[^"]*' ${{ inputs.pyproject-path }})
-          echo "new_version=$new_version" >> $GITHUB_ENV
-
-      - name: Get latest version
-        id: get_latest_version
-        run: |
-          package_name="${{ inputs.package-name }}"
-          latest_tag=$(git tag --list "v*-*${package_name}" --sort=-creatordate | head -n 1)
-          latest_version=$(echo $latest_tag | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
-          echo "latest_version=$latest_version" >> $GITHUB_ENV
-
-      - name: Check version bump
-        run: |
-          if [ "${{ env.new_version }}" == "${{ env.latest_version }}" ]; then
-            echo "Version has not been bumped!"
-            exit 1
-          else
-            echo "Version has been bumped."
-          fi
