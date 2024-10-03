@@ -1,8 +1,12 @@
----
 name: Reusable lint and test workflow for Python projects
 
 on:
   workflow_call:
+    inputs:
+      skip-coverage:
+        required: false
+        type: string
+        default: 'false'
 
 permissions:
   actions: read
@@ -31,10 +35,8 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          # stop the build if there are Python syntax errors or undefined
-          # names
-          ruff --output-format=github --select=E9,F63,F7,F82 \
-            --target-version=py311 .
+          # stop the build if there are Python syntax errors or undefined names
+          ruff --output-format=github --select=E9,F63,F7,F82 --target-version=py311 .
           # default set of ruff rules with GitHub Annotations
           ruff --output-format=github --target-version=py311 .
 
@@ -42,10 +44,11 @@ jobs:
         with:
           secrets: ${{ toJSON(secrets) }}
 
-      - name: Test with unittest
+      - name: Test with pytest
         run: |
-          python -m unittest discover -s tests
+          python -m pytest
 
       - name: Run tests with coverage (coverage must be at least 80% to pass)
+        if: inputs.skip-coverage != 'true'
         run: |
-          pytest --cov=. --cov-fail-under=80 tests/ # default value, coverage must be at least 80%
+          python -m pytest --cov=. --cov-fail-under=80
