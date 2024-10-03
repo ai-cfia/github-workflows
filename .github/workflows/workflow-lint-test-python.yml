@@ -42,9 +42,9 @@ jobs:
         with:
           secrets: ${{ toJSON(secrets) }}
 
-      - name: Test with unittest
+      - name: Test with pytest
         run: |
-          python -m unittest discover -s tests
+          python -m pytest
 
       - name: Run tests with coverage (coverage must be at least 80% to pass)
         if: inputs.skip-coverage != 'true'
