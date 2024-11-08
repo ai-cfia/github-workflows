@@ -1,0 +1,141 @@
+name: Workflow issue status
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  issue_comment:
+    types: [created, edited]
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  handle_issue_events:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Install GH CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+
+      - name: Authenticate to GH CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Check GH CLI version
+        run: gh --version
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Add "todo" label to newly created issue
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: 'Todo'
+
+      - name: Add "waiting on review" to the linked issue for an opened PR issue
+        if: github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft
+        run: |
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue edit $ISSUE_NUMBER --remove-label "In Progress" --add-label "waiting on review"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add "In Progress" label to the linked issue for a draft PR
+        if: github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.pull_request.draft
+        run: |
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue edit $ISSUE_NUMBER --remove-label "Todo" --add-label "In Progress"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add "Done" label when a PR is merged
+        if: github.event_name == 'pull_request' && github.event.action == 'merged'
+        run: |
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue edit $ISSUE_NUMBER --remove-label "waiting on review" --add-label "Done"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add "Won't do" to a closed PR
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && !github.event.pull_request.merged
+        run: |
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue edit $ISSUE_NUMBER --remove-label "waiting on review" --add-label "Won't do"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Passer de "Paused" à "In Progress" suite à un commentaire ou un commit
+      - name: Passer de "Paused" à "In Progress" suite à un commentaire ou un commit
+        if: github.event_name == 'pull_request' && (github.event.action == 'synchronize' || github.event.action == 'reopened')
+        run: |
+          ISSUE_NUMBER=$(echo "${{ github.event.issue.body }}" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue edit $ISSUE_NUMBER --remove-label "Paused" --add-label "In Progress"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Need to find a better solution for this (maybe our own "step")
+  # handle_scheduled_paused:
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'schedule'
+  #   steps:
+  #     - name: Install GH CLI
+  #       run: |
+  #         type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+  #         curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+  #         sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+  #         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+  #         sudo apt update
+  #         sudo apt install gh -y
+
+  #     - name: Authenticate to GH CLI
+  #       run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+  #     - name: Check GH CLI version
+  #       run: gh --version
+
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Identifier les PR ouvertes depuis plus de X jours
+  #       run: |
+  #         X=7 # Nombre de jours
+  #         CURRENT_DATE=$(date +%s)
+  #         PRS=$(gh pr list --state open --json number,createdAt,linkedIssues -q ".[] | select(((($CURRENT_DATE - (fromdateiso8601(.createdAt))) / 86400)) > $X) | {number: .number, linkedIssues: .linkedIssues}")
+  #         echo "$PRS" > prs_to_pause.json
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  #     - name: Mettre à jour les issues liées des PR en attente
+  #       run: |
+  #         X=7
+  #         CURRENT_DATE=$(date +%s)
+  #         cat prs_to_pause.json | jq -c '.[]' | while read pr; do
+  #           ISSUE_NUMBER=$(echo "$pr" | jq -r '.linkedIssues[].number')
+  #           if [ -n "$ISSUE_NUMBER" ]; then
+  #             gh issue edit $ISSUE_NUMBER --add-label "Paused"
+  #           fi
+  #         done
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
