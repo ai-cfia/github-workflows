@@ -1,14 +1,7 @@
 name: Workflow issue status
 
 on:
-  issues:
-    types: [opened, edited]
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-  issue_comment:
-    types: [created, edited]
-  schedule:
-    - cron: '0 0 * * *'
+  workflow_call:
 
 jobs:
   handle_issue_events:
