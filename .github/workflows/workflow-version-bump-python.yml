@@ -25,10 +25,18 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Parse new version from pyproject.toml
+      - name: Parse new version
         id: parse_new_version
         run: |
-          new_version=$(grep -Po '(?<=^version = ")[^"]*' ${{ inputs.pyproject-path || 'pyproject.toml' }})
+          file_path="${{ inputs.pyproject-path || 'pyproject.toml' }}"
+          if [[ "$file_path" == *.toml ]]; then
+            new_version=$(grep -Po '(?<=^version = ")[^"]*' "$file_path")
+          elif [[ "$file_path" == *.py ]]; then
+            new_version=$(grep -Po '(?<=version=")[^"]*' "$file_path")
+          else
+            echo "Unsupported file format for version parsing"
+            exit 1
+          fi
           echo "new_version=$new_version" >> $GITHUB_ENV
 
       - name: Get latest version
@@ -40,7 +48,7 @@ jobs:
           else
             latest_tag=$(git tag --list "v*-*${package_name}" --sort=-creatordate | head -n 1)
           fi
-          latest_version=$(echo $latest_tag | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
+          latest_version=$(echo "$latest_tag" | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
           echo "latest_version=$latest_version" >> $GITHUB_ENV
 
       - name: Check version bump
