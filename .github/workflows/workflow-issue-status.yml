@@ -134,8 +134,8 @@ jobs:
           ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
           OWNER: ${{ env.OWNER }}
 
-      - name: Add "todo" status to newly created issue
-        if: github.event_name == 'issues' && github.event.action == 'opened'
+      - name: Add "todo" status to a created / edited issue
+        if: github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'edited')
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
             ITEM_ID="${!PROJECT_ID_KEY}"
@@ -159,7 +159,32 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
-      - name: Add "In Review" to the linked issue for an opened PR issue
+      - name: Add "Won't do" status to a closed / deleted issue
+        if: github.event_name == 'issues' && (github.event.action == 'closed' || github.event.action == 'deleted')
+        run: |
+          for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
+            ITEM_ID="${!PROJECT_ID_KEY}"
+            BASE_PROJECT_ID="${PROJECT_ID_KEY#ITEM_ID_}"
+            eval "STATUS_FIELD_ID=\$STATUS_FIELD_ID_$BASE_PROJECT_ID"
+            if [ -z "$STATUS_FIELD_ID" ]; then
+              echo "STATUS_FIELD_ID for project $BASE_PROJECT_ID not found, skipping..."
+              continue
+            fi
+            eval "OPTIONS=\$STATUS_OPTIONS_$BASE_PROJECT_ID"
+            TARGET_STATUS_NAME="Won't do"
+            TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
+            NEW_OPTION_ID=$(echo "$OPTIONS" | jq -r --arg name "$TARGET_STATUS_NAME_LOWER" '.[] | select(.name | ascii_downcase == $name) | .id')
+            if [ -z "$NEW_OPTION_ID" ]; then
+              echo "Could not find status '$TARGET_STATUS_NAME'. Using default ID."
+            else
+              echo "Found status '$TARGET_STATUS_NAME' with ID: $NEW_OPTION_ID"
+            fi
+            gh project item-edit --id "$ITEM_ID" --project-id "$BASE_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
+          done
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+
+      - name: Add "In Review" status to an issue when the linked PR is open for a review
         if: github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
@@ -184,7 +209,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
-      - name: Add "In Progress" label to the linked issue for a draft PR
+      - name: Add "In Progress" status to an issue when the linked PR is in draft
         if: github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.pull_request.draft
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
@@ -209,7 +234,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
-      - name: Add "Done" label when a PR is merged
+      - name: Add "Done" status to an issue when the linked PR is in merged
         if: github.event_name == 'pull_request' && github.event.action == 'merged'
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
@@ -234,7 +259,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
-      - name: Add "Won't do" to a closed PR
+      - name: Add "Won't do" status to an issue when the linked PR is closed
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && !github.event.pull_request.merged
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
