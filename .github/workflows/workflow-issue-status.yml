@@ -2,6 +2,17 @@ name: Workflow issue status
 
 on:
   workflow_call:
+  issues:
+    types:
+      - opened
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+      - ready_for_review
+      - converted_to_draft
 
 env:
   OWNER: ai-cfia
