@@ -185,7 +185,9 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "In Review" status to an issue when the linked PR is open for a review
-        if: github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft
+        if: |
+          (github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft) ||
+          (github.event_name == 'pull_request' && github.event.action == 'ready_for_review')
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
             ITEM_ID="${!PROJECT_ID_KEY}"
@@ -210,7 +212,9 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "In Progress" status to an issue when the linked PR is in draft
-        if: github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.pull_request.draft
+        if: |
+          (github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.pull_request.draft) ||
+          (github.event_name == 'pull_request' && github.event.action == 'converted_to_draft')
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
             ITEM_ID="${!PROJECT_ID_KEY}"
