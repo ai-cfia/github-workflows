@@ -21,8 +21,8 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: 1057003
-          private-key: ${{ secrets.APP_PEM }}
+          app-id: ${{ secrets.GH_WORKFLOW_APP_ID }}
+          private-key: ${{ secrets.GH_WORKFLOW_APP_PEM }}
 
       - name: Install GH CLI
         run: |
