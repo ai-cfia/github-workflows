@@ -25,11 +25,12 @@ jobs:
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
             ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
           fi
+          echo "Current issue number: '$ISSUE_NUMBER'"
           echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_ENV
 
       # Use cases:
       # - "issues:opened": Set status to "Todo"
-      # - "issues:deleted" || "pull_request:closed" (when not merged): Set status to "Won't do"
+      # - "pull_request:closed" (when not merged): Set status to "Won't do"
       # - "pull_request:opened" || "pull_request:converted_to_draft": Set status to "In Progress"
       # - "pull_request:ready_for_review" || "pull_request:opened": Set status to "In Review"
       # - "pull_request:merged": Set status to "Done"
@@ -87,7 +88,6 @@ jobs:
 
             case "${GITHUB_EVENT_NAME}:${GITHUB_EVENT_ACTION}" in
               "issues:opened") TARGET_STATUS_NAME="Todo" ;;
-              "issues:deleted") TARGET_STATUS_NAME="Won't do" ;;
               "pull_request:opened_|_converted_to_draft") TARGET_STATUS_NAME="In Progress" ;;
               "pull_request:ready_for_review_|_opened") TARGET_STATUS_NAME="In Review" ;;
               "pull_request:merged") TARGET_STATUS_NAME="Done" ;;
