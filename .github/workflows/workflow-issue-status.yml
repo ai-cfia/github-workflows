@@ -159,8 +159,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
-      - name: Add "Won't do" status to a closed / deleted issue
-        if: github.event_name == 'issues' && (github.event.action == 'closed' || github.event.action == 'deleted')
+      - name: Add "Won't do" status to a deleted issue
+        if: github.event_name == 'issues' && github.event.action == 'deleted'
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
             ITEM_ID="${!PROJECT_ID_KEY}"
