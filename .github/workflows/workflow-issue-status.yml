@@ -36,14 +36,14 @@ jobs:
       - name: Extract issue number (new issue)
         if: github.event_name == 'issues' && github.event.action == 'opened'
         run: echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract issue number (PR)
         if: github.event_name == 'pull_request'
         run: echo "ISSUE_NUMBER=$(echo '${{ github.event.pull_request.body }}' | grep -oE '#[0-9]+' | tr -d '#')" >> $GITHUB_ENV
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch issue project(s) information(s)
         if: ${{ env.ISSUE_NUMBER != '' }}
@@ -120,7 +120,7 @@ jobs:
             echo "STATUS_FIELD_ID_$PROJECT_ID=$STATUS_FIELD_ID" >> $GITHUB_ENV
             echo "STATUS_OPTIONS_$PROJECT_ID=\"$OPTIONS\"" >> $GITHUB_ENV
           done
-        with:
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
           OWNER: ${{ env.OWNER }}
@@ -159,7 +159,7 @@ jobs:
 
             gh project item-edit --id "$ITEM_ID" --project-id "$BASE_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
           done
-        with:
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add "waiting on review" to the linked issue for an opened PR issue
