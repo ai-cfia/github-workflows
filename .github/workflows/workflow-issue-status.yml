@@ -134,8 +134,8 @@ jobs:
           ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
           OWNER: ${{ env.OWNER }}
 
-      - name: Add "todo" status to a created / edited issue
-        if: github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'edited')
+      - name: Add "todo" status to a new issue
+        if: github.event_name == 'issues' && github.event.action == 'opened'
         run: |
           for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
             ITEM_ID="${!PROJECT_ID_KEY}"
