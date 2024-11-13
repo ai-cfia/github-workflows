@@ -36,6 +36,7 @@ jobs:
           fi
 
           if [ -n "$ISSUE_NUMBER" ]; then
+            echo "Issue number '$ISSUE_NUMBER'"
             echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_ENV
           else
             echo "No issue number found."
