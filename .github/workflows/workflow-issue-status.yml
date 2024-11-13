@@ -159,53 +159,102 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
-      - name: Add "waiting on review" to the linked issue for an opened PR issue
+      - name: Add "In Review" to the linked issue for an opened PR issue
         if: github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft
         run: |
-          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
-          if [ -n "$ISSUE_NUMBER" ]; then
-            gh issue edit $ISSUE_NUMBER --remove-label "In Progress" --add-label "waiting on review"
-          fi
+          for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
+            ITEM_ID="${!PROJECT_ID_KEY}"
+            BASE_PROJECT_ID="${PROJECT_ID_KEY#ITEM_ID_}"
+            eval "STATUS_FIELD_ID=\$STATUS_FIELD_ID_$BASE_PROJECT_ID"
+            if [ -z "$STATUS_FIELD_ID" ]; then
+              echo "STATUS_FIELD_ID for project $BASE_PROJECT_ID not found, skipping..."
+              continue
+            fi
+            eval "OPTIONS=\$STATUS_OPTIONS_$BASE_PROJECT_ID"
+            TARGET_STATUS_NAME="In Review"
+            TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
+            NEW_OPTION_ID=$(echo "$OPTIONS" | jq -r --arg name "$TARGET_STATUS_NAME_LOWER" '.[] | select(.name | ascii_downcase == $name) | .id')
+            if [ -z "$NEW_OPTION_ID" ]; then
+              echo "Could not find status '$TARGET_STATUS_NAME'. Using default ID."
+            else
+              echo "Found status '$TARGET_STATUS_NAME' with ID: $NEW_OPTION_ID"
+            fi
+            gh project item-edit --id "$ITEM_ID" --project-id "$BASE_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
+          done
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "In Progress" label to the linked issue for a draft PR
         if: github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.pull_request.draft
         run: |
-          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
-          if [ -n "$ISSUE_NUMBER" ]; then
-            gh issue edit $ISSUE_NUMBER --remove-label "Todo" --add-label "In Progress"
-          fi
+          for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
+            ITEM_ID="${!PROJECT_ID_KEY}"
+            BASE_PROJECT_ID="${PROJECT_ID_KEY#ITEM_ID_}"
+            eval "STATUS_FIELD_ID=\$STATUS_FIELD_ID_$BASE_PROJECT_ID"
+            if [ -z "$STATUS_FIELD_ID" ]; then
+              echo "STATUS_FIELD_ID for project $BASE_PROJECT_ID not found, skipping..."
+              continue
+            fi
+            eval "OPTIONS=\$STATUS_OPTIONS_$BASE_PROJECT_ID"
+            TARGET_STATUS_NAME="In Progress"
+            TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
+            NEW_OPTION_ID=$(echo "$OPTIONS" | jq -r --arg name "$TARGET_STATUS_NAME_LOWER" '.[] | select(.name | ascii_downcase == $name) | .id')
+            if [ -z "$NEW_OPTION_ID" ]; then
+              echo "Could not find status '$TARGET_STATUS_NAME'. Using default ID."
+            else
+              echo "Found status '$TARGET_STATUS_NAME' with ID: $NEW_OPTION_ID"
+            fi
+            gh project item-edit --id "$ITEM_ID" --project-id "$BASE_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
+          done
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "Done" label when a PR is merged
         if: github.event_name == 'pull_request' && github.event.action == 'merged'
         run: |
-          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
-          if [ -n "$ISSUE_NUMBER" ]; then
-            gh issue edit $ISSUE_NUMBER --remove-label "waiting on review" --add-label "Done"
-          fi
+          for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
+            ITEM_ID="${!PROJECT_ID_KEY}"
+            BASE_PROJECT_ID="${PROJECT_ID_KEY#ITEM_ID_}"
+            eval "STATUS_FIELD_ID=\$STATUS_FIELD_ID_$BASE_PROJECT_ID"
+            if [ -z "$STATUS_FIELD_ID" ]; then
+              echo "STATUS_FIELD_ID for project $BASE_PROJECT_ID not found, skipping..."
+              continue
+            fi
+            eval "OPTIONS=\$STATUS_OPTIONS_$BASE_PROJECT_ID"
+            TARGET_STATUS_NAME="Done"
+            TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
+            NEW_OPTION_ID=$(echo "$OPTIONS" | jq -r --arg name "$TARGET_STATUS_NAME_LOWER" '.[] | select(.name | ascii_downcase == $name) | .id')
+            if [ -z "$NEW_OPTION_ID" ]; then
+              echo "Could not find status '$TARGET_STATUS_NAME'. Using default ID."
+            else
+              echo "Found status '$TARGET_STATUS_NAME' with ID: $NEW_OPTION_ID"
+            fi
+            gh project item-edit --id "$ITEM_ID" --project-id "$BASE_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
+          done
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "Won't do" to a closed PR
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && !github.event.pull_request.merged
         run: |
-          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
-          if [ -n "$ISSUE_NUMBER" ]; then
-            gh issue edit $ISSUE_NUMBER --remove-label "waiting on review" --add-label "Won't do"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-
-      # Passer de "Paused" à "In Progress" suite à un commentaire ou un commit
-      - name: Passer de "Paused" à "In Progress" suite à un commentaire ou un commit
-        if: github.event_name == 'pull_request' && (github.event.action == 'synchronize' || github.event.action == 'reopened')
-        run: |
-          ISSUE_NUMBER=$(echo "${{ github.event.issue.body }}" | grep -oE '#[0-9]+' | tr -d '#')
-          if [ -n "$ISSUE_NUMBER" ]; then
-            gh issue edit $ISSUE_NUMBER --remove-label "Paused" --add-label "In Progress"
-          fi
+          for PROJECT_ID_KEY in $(compgen -A variable | grep '^ITEM_ID_'); do
+            ITEM_ID="${!PROJECT_ID_KEY}"
+            BASE_PROJECT_ID="${PROJECT_ID_KEY#ITEM_ID_}"
+            eval "STATUS_FIELD_ID=\$STATUS_FIELD_ID_$BASE_PROJECT_ID"
+            if [ -z "$STATUS_FIELD_ID" ]; then
+              echo "STATUS_FIELD_ID for project $BASE_PROJECT_ID not found, skipping..."
+              continue
+            fi
+            eval "OPTIONS=\$STATUS_OPTIONS_$BASE_PROJECT_ID"
+            TARGET_STATUS_NAME="Won't do"
+            TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
+            NEW_OPTION_ID=$(echo "$OPTIONS" | jq -r --arg name "$TARGET_STATUS_NAME_LOWER" '.[] | select(.name | ascii_downcase == $name) | .id')
+            if [ -z "$NEW_OPTION_ID" ]; then
+              echo "Could not find status '$TARGET_STATUS_NAME'. Using default ID."
+            else
+              echo "Found status '$TARGET_STATUS_NAME' with ID: $NEW_OPTION_ID"
+            fi
+            gh project item-edit --id "$ITEM_ID" --project-id "$BASE_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
+          done
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
