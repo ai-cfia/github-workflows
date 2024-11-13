@@ -33,10 +33,10 @@ jobs:
           sudo apt update
           sudo apt install gh -y
 
-      - name: Authenticate to GH CLI
-        run: echo "${{ env.GITHUB_TOKEN }}" | gh auth login --with-token
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+      # - name: Authenticate to GH CLI
+      #   run: echo "${{ env.GITHUB_TOKEN }}" | gh auth login --with-token
+      #   env:
+      #     GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Check GH CLI version
         run: gh --version
