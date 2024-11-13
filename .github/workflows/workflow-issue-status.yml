@@ -36,7 +36,6 @@ jobs:
         run: echo "ISSUE_NUMBER=$(echo '${{ github.event.pull_request.body }}' | grep -oE '#[0-9]+' | tr -d '#')" >> $GITHUB_ENV
 
       - name: Fetch issue project(s) information(s)
-        if: ${{ env.ISSUE_NUMBER != '' }}
         run: |
           ISSUE_NUMBER="${ISSUE_NUMBER}"
           OWNER="${OWNER}"
