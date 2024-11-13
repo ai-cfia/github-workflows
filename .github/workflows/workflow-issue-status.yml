@@ -6,12 +6,24 @@ on:
 env:
   OWNER: ai-cfia
 
+# https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/automating-projects-using-actions
+# GITHUB_TOKEN is scoped to the repository level and cannot access projects.
+# To access projects you can either create a GitHub App (recommended for organization projects)
+# or a personal access token (recommended for user projects).
+# Workflow examples for both approaches are shown below.
 jobs:
   handle_issue_events:
     runs-on: ubuntu-latest
     permissions: write-all
 
     steps:
+      - name: Generate token from Github application (GH app for workflows)
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
       - name: Install GH CLI
         run: |
           type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
@@ -22,7 +34,9 @@ jobs:
           sudo apt install gh -y
 
       - name: Authenticate to GH CLI
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        run: echo "${{ env.GITHUB_TOKEN }}" | gh auth login --with-token
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Check GH CLI version
         run: gh --version
@@ -33,14 +47,10 @@ jobs:
       - name: Extract issue number (new issue)
         if: github.event_name == 'issues' && github.event.action == 'opened'
         run: echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract issue number (PR)
         if: github.event_name == 'pull_request'
         run: echo "ISSUE_NUMBER=$(echo '${{ github.event.pull_request.body }}' | grep -oE '#[0-9]+' | tr -d '#')" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch issue project(s) information(s)
         if: ${{ env.ISSUE_NUMBER != '' }}
@@ -118,7 +128,7 @@ jobs:
             echo "STATUS_OPTIONS_$PROJECT_ID=\"$OPTIONS\"" >> $GITHUB_ENV
           done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
           OWNER: ${{ env.OWNER }}
 
@@ -157,7 +167,7 @@ jobs:
             gh project item-edit --id "$ITEM_ID" --project-id "$BASE_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
           done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "waiting on review" to the linked issue for an opened PR issue
         if: github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft
@@ -167,7 +177,7 @@ jobs:
             gh issue edit $ISSUE_NUMBER --remove-label "In Progress" --add-label "waiting on review"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "In Progress" label to the linked issue for a draft PR
         if: github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.pull_request.draft
@@ -177,7 +187,7 @@ jobs:
             gh issue edit $ISSUE_NUMBER --remove-label "Todo" --add-label "In Progress"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "Done" label when a PR is merged
         if: github.event_name == 'pull_request' && github.event.action == 'merged'
@@ -187,7 +197,7 @@ jobs:
             gh issue edit $ISSUE_NUMBER --remove-label "waiting on review" --add-label "Done"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Add "Won't do" to a closed PR
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && !github.event.pull_request.merged
@@ -197,7 +207,7 @@ jobs:
             gh issue edit $ISSUE_NUMBER --remove-label "waiting on review" --add-label "Won't do"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       # Passer de "Paused" à "In Progress" suite à un commentaire ou un commit
       - name: Passer de "Paused" à "In Progress" suite à un commentaire ou un commit
@@ -208,4 +218,4 @@ jobs:
             gh issue edit $ISSUE_NUMBER --remove-label "Paused" --add-label "In Progress"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
