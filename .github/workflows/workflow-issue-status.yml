@@ -34,7 +34,6 @@ jobs:
       # - "pull_request:ready_for_review" || "pull_request:opened": Set status to "In Review"
       # - "pull_request:merged": Set status to "Done"
       - name: Fetch project data and update status
-        if: env.ISSUE_NUMBER != ""
         run: |
           function update_status() {
             local ITEM_ID=$1
