@@ -40,8 +40,7 @@ jobs:
             local ITEM_ID=$1
             local PROJECT_ID=$2
             local TARGET_STATUS_NAME=$3
-
-            # Fetch the status field details using GraphQL
+            # Récupérer les détails du champ de statut en utilisant GraphQL
             local STATUS_FIELD_ENTRY=$(gh api graphql -f query='
               query {
                 node(id: "'"$PROJECT_ID"'") {
@@ -62,37 +61,28 @@ jobs:
                 }
               }
             ' | jq '.data.node.fields.nodes[] | select(.name=="Status")')
-
-            # Extract IDs
+            # Extraire les IDs
             local STATUS_FIELD_ID=$(echo "$STATUS_FIELD_ENTRY" | jq -r '.id')
             local OPTIONS_JSON=$(echo "$STATUS_FIELD_ENTRY" | jq -c '.options')
             local TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
             local NEW_OPTION_ID=$(echo "$OPTIONS_JSON" | jq -r --arg name "$TARGET_STATUS_NAME_LOWER" '.[] | select(.name | ascii_downcase == $name) | .id')
-
-            echo "Running gh project item-edit --id '$ITEM_ID' --project-id '$PROJECT_ID' --field-id '$STATUS_FIELD_ID' --single-select-option-id '${NEW_OPTION_ID}'"
+            echo "Exécution de : gh project item-edit --id '$ITEM_ID' --project-id '$PROJECT_ID' --field-id '$STATUS_FIELD_ID' --single-select-option-id '${NEW_OPTION_ID}'"
             gh project item-edit --id "$ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "${NEW_OPTION_ID}"
-            echo "Done"
+            echo "Terminé"
           }
 
-          # Process each project where ISSUE_NUMBER is present
+          # Traiter chaque projet où ISSUE_NUMBER est présent
           ISSUE_NUMBER=${{ env.ISSUE_NUMBER }}
           ISSUE_PROJECTS_JSON=$(gh issue view "$ISSUE_NUMBER" --json projectItems)
-
-          for item in $(echo "${ISSUE_PROJECTS_JSON}" | jq -r '.projectItems[] | @base64'); do
-            _jq() {
-              echo ${item} | base64 --decode | jq -r ${1}
-            }
-            PROJECT_ID=$(_jq '.id')
-
-            # Use correct syntax to fetch all project items associated with a project
-            ALL_ITEMS_JSON=$(gh project item-list --owner ai-cfia --limit 200 --json items -q '.[]' --format json $PROJECT_ID)
-            ITEM_ID=$(echo "${ALL_ITEMS_JSON}" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
-
+          for PROJECT_ID in $(echo "${ISSUE_PROJECTS_JSON}" | jq -r '.projectItems[].project.id'); do
+            # Récupérer tous les items du projet associé
+            ALL_ITEMS_JSON=$(gh project item-list --owner ai-cfia --limit 200 --format json "$PROJECT_ID")
+            # Extraction de l'ID de l'item du projet correspondant à l'issue ou au pull request
+            ITEM_ID=$(echo "${ALL_ITEMS_JSON}" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
             if [ -z "$ITEM_ID" ]; then
-              echo "Item not found for project $PROJECT_ID"
+              echo "Item non trouvé pour le projet $PROJECT_ID"
               continue
             fi
-
             case "${GITHUB_EVENT_NAME}:${GITHUB_EVENT_ACTION}" in
               "issues:opened") TARGET_STATUS_NAME="Todo" ;;
               "pull_request:opened"|"pull_request:converted_to_draft") TARGET_STATUS_NAME="In Progress" ;;
@@ -100,11 +90,10 @@ jobs:
               "pull_request:merged") TARGET_STATUS_NAME="Done" ;;
               "pull_request:closed") TARGET_STATUS_NAME="Won't do" ;;
               *)
-                echo "No status change action for this event"
+                echo "Aucune action de changement de statut pour cet événement"
                 continue
                 ;;
             esac
-
             update_status "$ITEM_ID" "$PROJECT_ID" "$TARGET_STATUS_NAME"
           done
         env:
