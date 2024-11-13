@@ -39,6 +39,7 @@ jobs:
             echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_ENV
           else
             echo "No issue number found."
+            exit 1
           fi
 
       - name: Fetch issue project(s) information(s)
@@ -49,33 +50,29 @@ jobs:
 
           declare -A PROJECT_NUMBER_ID_MAP ITEM_ID_MAP STATUS_FIELD_ID_MAP STATUS_OPTIONS_MAP
 
-          if [ -z "$ISSUE_NUMBER" ]; then
-            echo "ISSUE_NUMBER is not set. Skipping this step."
-            exit 0
-          fi
-
           echo "1. Project associated with this issue number #$ISSUE_NUMBER"
+
           PROJECT_ITEMS_JSON=$(gh issue view "$ISSUE_NUMBER" --json projectItems)
           PROJECT_TITLES=$(echo "$PROJECT_ITEMS_JSON" | jq -r '.projectItems[].title')
           echo "$PROJECT_TITLES"
 
           echo "2. Project information"
+
           PROJECT_LIST=$(gh project list --owner "$OWNER")
           while read -r TITLE; do
             PROJECT_LINE=$(echo "$PROJECT_LIST" | grep -F "$TITLE")
             if [ -z "$PROJECT_LINE" ]; then
-              echo "Project '$TITLE' not found."
+              echo "Project '$TITLE' not found. Skipping..."
               continue
             fi
             PROJECT_NUMBER=$(echo "$PROJECT_LINE" | awk '{print $1}')
             PROJECT_ID=$(echo "$PROJECT_LINE" | awk '{print $NF}')
-            echo "Project '$TITLE' found :"
-            echo "  # : $PROJECT_NUMBER"
-            echo "  ID     : $PROJECT_ID"
+            echo "Project '$TITLE' found with # '$PROJECT_NUMBER' and ID '$PROJECT_ID'"
             PROJECT_NUMBER_ID_MAP[$PROJECT_NUMBER]=$PROJECT_ID
           done <<< "$PROJECT_TITLES"
 
           echo "3. Item id associated to each project for a specific issue"
+
           for PROJECT_NUMBER in "${!PROJECT_NUMBER_ID_MAP[@]}"; do
             PROJECT_ID=${PROJECT_NUMBER_ID_MAP[$PROJECT_NUMBER]}
             echo "Searching #$ISSUE_NUMBER in '$PROJECT_NUMBER'"
@@ -83,7 +80,7 @@ jobs:
             ITEM_ENTRY=$(echo "$ITEMS_JSON" | jq -r --argjson ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == $ISSUE_NUMBER)')
             ITEM_ID=$(echo "$ITEM_ENTRY" | jq -r '.id')
             if [ -z "$ITEM_ID" ]; then
-              echo "Issue #$ISSUE_NUMBER not found in '$PROJECT_NUMBER'."
+              echo "Issue #$ISSUE_NUMBER not found in '$PROJECT_NUMBER'. Skipping..."
               continue
             fi
             echo "Item found #$ISSUE_NUMBER in '$PROJECT_NUMBER' with ID: '$ITEM_ID'"
@@ -91,6 +88,7 @@ jobs:
           done
 
           echo "4. Find 'Status' field"
+
           for PROJECT_ID in "${!ITEM_ID_MAP[@]}"; do
             FIELDS_JSON=$(gh api graphql -f query='
               query {
@@ -115,18 +113,17 @@ jobs:
             STATUS_FIELD_ENTRY=$(echo "$FIELDS_JSON" | jq '.data.node.fields.nodes[] | select(.name=="Status")')
             STATUS_FIELD_ID=$(echo "$STATUS_FIELD_ENTRY" | jq -r '.id')
             if [ -z "$STATUS_FIELD_ID" ] || [ "$STATUS_FIELD_ID" == "null" ]; then
-              echo "Status not found in '$PROJECT_ID'."
+              echo "Status not found in '$PROJECT_ID'. Skipping..."
               continue
             fi
-            echo "'Status' found : ID '$STATUS_FIELD_ID'"
+            echo "'Status' field found for project ID '$PROJECT_ID': '$STATUS_FIELD_ID'"
             OPTIONS_JSON=$(echo "$STATUS_FIELD_ENTRY" | jq -c '.options')
-            echo "'Status' options :"
-            echo "$OPTIONS_JSON" | jq -r '.[] | "\t option : \(.id) | Name : \(.name)"'
             STATUS_FIELD_ID_MAP[$PROJECT_ID]=$STATUS_FIELD_ID
             STATUS_OPTIONS_MAP[$PROJECT_ID]=$OPTIONS_JSON
           done
 
           echo "5. Update item card for each project"
+
           EVENT_NAME="${{ github.event_name }}"
           EVENT_ACTION="${{ github.event.action }}"
 
@@ -136,7 +133,7 @@ jobs:
             OPTIONS=${STATUS_OPTIONS_MAP[$PROJECT_ID]}
 
             if [ -z "$STATUS_FIELD_ID" ]; then
-              echo "STATUS_FIELD_ID for project $PROJECT_ID not found, skipping..."
+              echo "STATUS_FIELD_ID for project $PROJECT_ID not found. Skipping..."
               continue
             fi
 
@@ -145,6 +142,7 @@ jobs:
               "issues")
                 case "$EVENT_ACTION" in
                   "opened")
+                    echo "Targeted field name: Todo"
                     TARGET_STATUS_NAME="Todo"
                     ;;
                 esac
@@ -153,21 +151,27 @@ jobs:
                 case "$EVENT_ACTION" in
                   "opened")
                     if [ "${{ github.event.pull_request.draft }}" == "true" ]; then
+                      echo "Targeted field name: In Progress"
                       TARGET_STATUS_NAME="In Progress"
                     else
+                      echo "Targeted field name: In Review"
                       TARGET_STATUS_NAME="In Review"
                     fi
                     ;;
                   "ready_for_review")
+                    echo "Targeted field name: In Review"
                     TARGET_STATUS_NAME="In Review"
                     ;;
                   "converted_to_draft")
+                    echo "Targeted field name: In Progress"
                     TARGET_STATUS_NAME="In Progress"
                     ;;
                   "closed")
                     if [ "${{ github.event.pull_request.merged }}" == "true" ]; then
+                      echo "Targeted field name: Done"
                       TARGET_STATUS_NAME="Done"
                     else
+                      echo "Targeted field name: Won't do"
                       TARGET_STATUS_NAME="Won't do"
                     fi
                     ;;
@@ -176,8 +180,8 @@ jobs:
             esac
 
             if [ -z "$TARGET_STATUS_NAME" ]; then
-              echo "No appropriate status for event $EVENT_NAME/$EVENT_ACTION, skipping..."
-              continue
+              echo "No appropriate status for event $EVENT_NAME/$EVENT_ACTION. Use case not managed."
+              exit 1
             fi
 
             TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
@@ -185,11 +189,14 @@ jobs:
 
             if [ -z "$NEW_OPTION_ID" ]; then
               echo "Could not find status '$TARGET_STATUS_NAME'. Using default ID."
+              exit 1
             else
               echo "Found status '$TARGET_STATUS_NAME' with ID: $NEW_OPTION_ID"
             fi
 
+            echo "Updating..."
             gh project item-edit --id "$ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
+            echo "Done!"
           done
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
