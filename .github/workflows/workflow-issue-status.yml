@@ -9,11 +9,11 @@ env:
 jobs:
   handle_issue_events:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
-      repository-projects: write
+    # permissions:
+    #   contents: write
+    #   issues: write
+    #   pull-requests: write
+    #   repository-projects: write
 
     steps:
       - name: Install GH CLI
