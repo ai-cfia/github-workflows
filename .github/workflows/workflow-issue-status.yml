@@ -32,7 +32,7 @@ jobs:
           if [ "${{ github.event_name }}" == "issues" ] && [ "${{ github.event.action }}" == "opened" ]; then
             ISSUE_NUMBER="${{ github.event.issue.number }}"
           elif [ "${{ github.event_name }}" == "pull_request" ]; then
-            ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
+            ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '^[0-9]+')
           fi
 
           if [ -n "$ISSUE_NUMBER" ]; then
