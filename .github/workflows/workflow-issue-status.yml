@@ -27,18 +27,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Extract issue number (new issue)
-        if: github.event_name == 'issues' && github.event.action == 'opened'
+      - name: Extract issue number
         run: |
-          echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
-          echo "Issue Number extracted: $ISSUE_NUMBER"
+          if [ "${{ github.event_name }}" == "issues" ] && [ "${{ github.event.action }}" == "opened" ]; then
+            ISSUE_NUMBER="${{ github.event.issue.number }}"
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
+          fi
 
-      - name: Extract issue number (PR)
-        if: github.event_name == 'pull_request'
-        run: |
-          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE '#[0-9]+' | tr -d '#')
-          echo "ISSUE_NUMBER=${ISSUE_NUMBER}" >> $GITHUB_ENV
-          echo "Issue Number extracted from PR: $ISSUE_NUMBER"
+          if [ -n "$ISSUE_NUMBER" ]; then
+            echo "Issue number '$ISSUE_NUMBER'"
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_ENV
+          else
+            echo "No issue number found."
+            exit 1
+          fi
 
       - name: Fetch issue project(s) information(s)
         if: ${{ env.ISSUE_NUMBER != '' }}
