@@ -1,0 +1,216 @@
+name: Workflow issue status
+
+on:
+  workflow_call:
+  issues:
+    types:
+      - opened
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+      - ready_for_review
+      - converted_to_draft
+
+env:
+  OWNER: ai-cfia
+
+jobs:
+  handle_issue_events:
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    steps:
+      # https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/automating-projects-using-actions
+      # GITHUB_TOKEN is scoped to the repository level and cannot access projects.
+      # To access projects you can either create a GitHub App (recommended for organization projects)
+      # or a personal access token (recommended for user projects).
+      # Workflow examples for both approaches are shown below.
+      - name: Generate token from Github application (GH app for workflows)
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GH_WORKFLOW_APP_ID }}
+          private-key: ${{ secrets.GH_WORKFLOW_APP_PEM }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Extract issue number
+        run: |
+          if [ "${{ github.event_name }}" == "issues" ] && [ "${{ github.event.action }}" == "opened" ]; then
+            ISSUE_NUMBER="${{ github.event.issue.number }}"
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            ISSUE_NUMBER=$(echo "${{ github.event.pull_request.head.ref }}" | grep -oE '^[0-9]+')
+          fi
+
+          if [ -n "$ISSUE_NUMBER" ]; then
+            echo "Issue number '$ISSUE_NUMBER'"
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_ENV
+          else
+            echo "No issue number found."
+            exit 1
+          fi
+
+      - name: Fetch issue project(s) information(s)
+        if: ${{ env.ISSUE_NUMBER != '' }}
+        run: |
+          ISSUE_NUMBER="${ISSUE_NUMBER}"
+          OWNER="${OWNER}"
+
+          declare -A PROJECT_NUMBER_ID_MAP ITEM_ID_MAP STATUS_FIELD_ID_MAP STATUS_OPTIONS_MAP
+
+          echo "1. Project associated with this issue number #$ISSUE_NUMBER"
+
+          PROJECT_ITEMS_JSON=$(gh issue view "$ISSUE_NUMBER" --json projectItems)
+          PROJECT_TITLES=$(echo "$PROJECT_ITEMS_JSON" | jq -r '.projectItems[].title')
+          echo "$PROJECT_TITLES"
+
+          echo "2. Project information"
+
+          PROJECT_LIST=$(gh project list --owner "$OWNER")
+          while read -r TITLE; do
+            PROJECT_LINE=$(echo "$PROJECT_LIST" | grep -F "$TITLE")
+            if [ -z "$PROJECT_LINE" ]; then
+              echo "Project '$TITLE' not found. Skipping..."
+              continue
+            fi
+            PROJECT_NUMBER=$(echo "$PROJECT_LINE" | awk '{print $1}')
+            PROJECT_ID=$(echo "$PROJECT_LINE" | awk '{print $NF}')
+            echo "Project '$TITLE' found with # '$PROJECT_NUMBER' and ID '$PROJECT_ID'"
+            PROJECT_NUMBER_ID_MAP[$PROJECT_NUMBER]=$PROJECT_ID
+          done <<< "$PROJECT_TITLES"
+
+          echo "3. Item id associated to each project for a specific issue"
+
+          for PROJECT_NUMBER in "${!PROJECT_NUMBER_ID_MAP[@]}"; do
+            PROJECT_ID=${PROJECT_NUMBER_ID_MAP[$PROJECT_NUMBER]}
+            echo "Searching #$ISSUE_NUMBER in '$PROJECT_NUMBER'"
+            ITEMS_JSON=$(gh project item-list "$PROJECT_NUMBER" --limit 2000 --owner "$OWNER" --format json)
+            ITEM_ENTRY=$(echo "$ITEMS_JSON" | jq -r --argjson ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == $ISSUE_NUMBER)')
+            ITEM_ID=$(echo "$ITEM_ENTRY" | jq -r '.id')
+            if [ -z "$ITEM_ID" ]; then
+              echo "Issue #$ISSUE_NUMBER not found in '$PROJECT_NUMBER'. Skipping..."
+              continue
+            fi
+            echo "Item found #$ISSUE_NUMBER in '$PROJECT_NUMBER' with ID: '$ITEM_ID'"
+            ITEM_ID_MAP[$PROJECT_ID]=$ITEM_ID
+          done
+
+          echo "4. Find 'Status' field"
+
+          for PROJECT_ID in "${!ITEM_ID_MAP[@]}"; do
+            FIELDS_JSON=$(gh api graphql -f query='
+              query {
+                node(id: "'"$PROJECT_ID"'") {
+                  ... on ProjectV2 {
+                    fields(first: 20) {
+                      nodes {
+                        ... on ProjectV2SingleSelectField {
+                          id
+                          name
+                          options {
+                            id
+                            name
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ')
+            STATUS_FIELD_ENTRY=$(echo "$FIELDS_JSON" | jq '.data.node.fields.nodes[] | select(.name=="Status")')
+            STATUS_FIELD_ID=$(echo "$STATUS_FIELD_ENTRY" | jq -r '.id')
+            if [ -z "$STATUS_FIELD_ID" ] || [ "$STATUS_FIELD_ID" == "null" ]; then
+              echo "Status not found in '$PROJECT_ID'. Skipping..."
+              continue
+            fi
+            echo "'Status' field found for project ID '$PROJECT_ID': '$STATUS_FIELD_ID'"
+            OPTIONS_JSON=$(echo "$STATUS_FIELD_ENTRY" | jq -c '.options')
+            STATUS_FIELD_ID_MAP[$PROJECT_ID]=$STATUS_FIELD_ID
+            STATUS_OPTIONS_MAP[$PROJECT_ID]=$OPTIONS_JSON
+          done
+
+          echo "5. Update item card for each project"
+
+          EVENT_NAME="${{ github.event_name }}"
+          EVENT_ACTION="${{ github.event.action }}"
+
+          for PROJECT_ID in "${!ITEM_ID_MAP[@]}"; do
+            ITEM_ID=${ITEM_ID_MAP[$PROJECT_ID]}
+            STATUS_FIELD_ID=${STATUS_FIELD_ID_MAP[$PROJECT_ID]}
+            OPTIONS=${STATUS_OPTIONS_MAP[$PROJECT_ID]}
+
+            if [ -z "$STATUS_FIELD_ID" ]; then
+              echo "STATUS_FIELD_ID for project $PROJECT_ID not found. Skipping..."
+              continue
+            fi
+
+            TARGET_STATUS_NAME=""
+            case "$EVENT_NAME" in
+              "issues")
+                case "$EVENT_ACTION" in
+                  "opened")
+                    echo "Targeted field name: Todo"
+                    TARGET_STATUS_NAME="Todo"
+                    ;;
+                esac
+                ;;
+              "pull_request")
+                case "$EVENT_ACTION" in
+                  "opened")
+                    if [ "${{ github.event.pull_request.draft }}" == "true" ]; then
+                      echo "Targeted field name: In Progress"
+                      TARGET_STATUS_NAME="In Progress"
+                    else
+                      echo "Targeted field name: In Review"
+                      TARGET_STATUS_NAME="In Review"
+                    fi
+                    ;;
+                  "ready_for_review")
+                    echo "Targeted field name: In Review"
+                    TARGET_STATUS_NAME="In Review"
+                    ;;
+                  "converted_to_draft")
+                    echo "Targeted field name: In Progress"
+                    TARGET_STATUS_NAME="In Progress"
+                    ;;
+                  "closed")
+                    if [ "${{ github.event.pull_request.merged }}" == "true" ]; then
+                      echo "Targeted field name: Done"
+                      TARGET_STATUS_NAME="Done"
+                    else
+                      echo "Targeted field name: Won't do"
+                      TARGET_STATUS_NAME="Won't do"
+                    fi
+                    ;;
+                esac
+                ;;
+            esac
+
+            if [ -z "$TARGET_STATUS_NAME" ]; then
+              echo "No appropriate status for event $EVENT_NAME/$EVENT_ACTION. Use case not managed."
+              exit 1
+            fi
+
+            TARGET_STATUS_NAME_LOWER=$(echo "$TARGET_STATUS_NAME" | tr '[:upper:]' '[:lower:]')
+            NEW_OPTION_ID=$(echo "$OPTIONS" | jq -r --arg name "$TARGET_STATUS_NAME_LOWER" '.[] | select(.name | ascii_downcase == $name) | .id')
+
+            if [ -z "$NEW_OPTION_ID" ]; then
+              echo "Could not find status '$TARGET_STATUS_NAME'. Using default ID."
+              exit 1
+            else
+              echo "Found status '$TARGET_STATUS_NAME' with ID: $NEW_OPTION_ID"
+            fi
+
+            echo "Updating..."
+            gh project item-edit --id "$ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$NEW_OPTION_ID"
+            echo "Done!"
+          done
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
+          OWNER: ${{ env.OWNER }}
