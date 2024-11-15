@@ -186,6 +186,10 @@ jobs:
                     echo "Targeted field name: In Progress"
                     TARGET_STATUS_NAME="In Progress"
                     ;;
+                  "reopened")
+                    echo "Targeted field name: In Progress"
+                    TARGET_STATUS_NAME="In Progress"
+                    ;;
                   "closed")
                     if [ "${{ github.event.pull_request.merged }}" == "true" ]; then
                       echo "Targeted field name: Done"
@@ -193,6 +197,16 @@ jobs:
                     else
                       echo "Targeted field name: Won't do"
                       TARGET_STATUS_NAME="Won't do"
+                    fi
+                    ;;
+                  "synchronize")
+                    STATUS=$(gh pr view ${{ github.event.pull_request.number }} --json isDraft --jq '.isDraft')
+                    if [ "$STATUS" == "false" ]; then
+                      echo "Targeted field name: In Review"
+                      TARGET_STATUS_NAME="In Review"
+                    else
+                      echo "Targeted field name: In Progress"
+                      TARGET_STATUS_NAME="In Progress"
                     fi
                     ;;
                 esac
