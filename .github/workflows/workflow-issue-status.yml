@@ -2,11 +2,6 @@ name: Workflow issue status
 
 on:
   workflow_call:
-    inputs:
-      related-project:
-        required: true
-        type: string
-        default: howard
   issues:
     types:
       - opened
@@ -90,20 +85,21 @@ jobs:
 
           echo "3. Item id associated to each project for a specific issue and keep the associated ID of the related-project"
 
-          RELATED_PROJECT="${{ inputs.related-project }}"
+          CURRENT_REPOSITORY="${{ github.repository }}"
+          echo "3.5 Current repository: '$CURRENT_REPOSITORY'"
 
           for PROJECT_NUMBER in "${!PROJECT_NUMBER_ID_MAP[@]}"; do
             PROJECT_ID=${PROJECT_NUMBER_ID_MAP[$PROJECT_NUMBER]}
             echo "Searching #$ISSUE_NUMBER in '$PROJECT_NUMBER'"
             ITEMS_JSON=$(gh project item-list "$PROJECT_NUMBER" --limit 2000 --owner "$OWNER" --format json)
 
-            ITEM_ENTRY=$(echo "$ITEMS_JSON" | jq -r --argjson ISSUE_NUMBER "$ISSUE_NUMBER" --arg RELATED_PROJECT "$RELATED_PROJECT" \
-              '.items[] | select(.content.number == $ISSUE_NUMBER and (.content.repository | contains($RELATED_PROJECT)))')
+            ITEM_ENTRY=$(echo "$ITEMS_JSON" | jq -r --argjson ISSUE_NUMBER "$ISSUE_NUMBER" --arg REPO "$CURRENT_REPOSITORY" \
+              '.items[] | select(.content.number == $ISSUE_NUMBER and (.content.repository == $REPO))')
 
             ITEM_ID=$(echo "$ITEM_ENTRY" | jq -r '.id')
 
             if [ -z "$ITEM_ENTRY" ]; then
-              echo "Issue #$ISSUE_NUMBER with repository containing '$RELATED_PROJECT' not found in '$PROJECT_NUMBER'. Skipping..."
+              echo "Issue #$ISSUE_NUMBER with repository '$CURRENT_REPOSITORY' not found in '$PROJECT_NUMBER'. Skipping..."
               continue
             fi
 
