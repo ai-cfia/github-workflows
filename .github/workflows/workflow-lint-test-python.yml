@@ -17,6 +17,8 @@ jobs:
     runs-on: gh-runner
     steps:
       - uses: actions/checkout@v4
+      - name: Install PostgreSQL client libraries
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -32,6 +34,7 @@ jobs:
             pip install -r requirements.txt; \
           fi
           pip install pytest pytest-cov # for coverage
+          pip install psycopg[binary]
 
       - name: Lint with ruff
         run: |
