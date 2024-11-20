@@ -16,6 +16,7 @@ on:
 
 env:
   OWNER: ai-cfia
+  REPO_PROJECT: github-workflows/repo_project.txt
 
 jobs:
   handle_issue_events:
@@ -59,12 +60,27 @@ jobs:
         run: |
           ISSUE_NUMBER="${ISSUE_NUMBER}"
           OWNER="${OWNER}"
+          REPO_NAME="${{ github.repository }}"
+          FILE="${REPO_PROJECT}"
 
           declare -A PROJECT_NUMBER_ID_MAP ITEM_ID_MAP STATUS_FIELD_ID_MAP STATUS_OPTIONS_MAP
 
           echo "1. Project associated with this issue number #$ISSUE_NUMBER"
 
           PROJECT_ITEMS_JSON=$(gh issue view "$ISSUE_NUMBER" --json projectItems)
+          if [ "$(echo "$PROJECT_ITEMS_JSON" | jq '.projectItems | length')" -eq 0 ]; then
+            echo "The projectItems list is empty. Assigning project from '$REPO_PROJECT'"
+            PROJECT=$(grep "^${REPO_NAME}_" "$FILE" | cut -d'_' -f2)
+
+            if [ -n "$PROJECT" ]; then
+              gh issue edit "$ISSUE_NUMBER" --add-project "$PROJECT"
+              PROJECT_ITEMS_JSON=$(gh issue view "$ISSUE_NUMBER" --json projectItems)
+              echo "Assigned project $PROJECT to issue $ISSUE_NUMBER."
+            else
+              echo "No matching project found for repository $REPO_NAME."
+            fi
+          fi
+
           PROJECT_TITLES=$(echo "$PROJECT_ITEMS_JSON" | jq -r '.projectItems[].title')
           echo "$PROJECT_TITLES"
 
