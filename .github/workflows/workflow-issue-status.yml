@@ -63,6 +63,8 @@ jobs:
           REPO_NAME="${{ github.repository }}"
           FILE="${REPO_PROJECT}"
 
+          ls -lah
+
           declare -A PROJECT_NUMBER_ID_MAP ITEM_ID_MAP STATUS_FIELD_ID_MAP STATUS_OPTIONS_MAP
 
           echo "1. Project associated with this issue number #$ISSUE_NUMBER"
