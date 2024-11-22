@@ -36,8 +36,15 @@ jobs:
           app-id: ${{ secrets.GH_WORKFLOW_APP_ID }}
           private-key: ${{ secrets.GH_WORKFLOW_APP_PEM }}
 
-      - name: Checkout Repository
+      - name: Checkout current repository
         uses: actions/checkout@v3
+
+      - name: Checkout ai-cfia/github-workflows repo (for repo_project.txt file)
+        uses: actions/checkout@v3
+        with:
+          repository: ai-cfia/github-workflows
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: github-workflows
 
       - name: Extract issue number
         run: |
