@@ -54,7 +54,7 @@ jobs:
             ISSUE_NUMBER="$GITHUB_ISSUE_NUMBER"
           elif [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
             BRANCH_NAME="$GITHUB_HEAD_REF"
-            if [[ "$BRANCH_NAME" =~ ^[0-9]{2,} ]]; then
+            if [[ "$BRANCH_NAME" =~ ^[0-9]{1,} ]]; then
               ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '^[0-9]+')
             else
               echo "1. No issue found. The branch must be created from the issue page so that its name is in the correct format (e.g., 123-my-new-feature)."
