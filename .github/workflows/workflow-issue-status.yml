@@ -47,11 +47,6 @@ jobs:
           path: github-workflows
 
       - name: Extract issue number
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          GITHUB_EVENT_ACTION: ${{ github.event.action }}
-          GITHUB_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           ISSUE_NUMBER=""
 
@@ -72,6 +67,11 @@ jobs:
             echo "Issue number '$ISSUE_NUMBER'"
             echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_ENV
           fi
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_ACTION: ${{ github.event.action }}
+          GITHUB_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
 
       - name: Fetch issue project(s) information(s)
         if: ${{ env.ISSUE_NUMBER != '' }}
