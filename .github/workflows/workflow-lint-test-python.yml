@@ -49,9 +49,9 @@ jobs:
 
       - name: Test with pytest
         run: |
-          python -m pytest
+          python -m pytest --no-showlocals
 
       - name: Run tests with coverage (coverage must be at least 80% to pass)
         if: inputs.skip-coverage != 'true'
         run: |
-          python -m pytest --cov=. --cov-fail-under=80
+          python -m pytest --cov=. --cov-fail-under=80 --no-showlocals
