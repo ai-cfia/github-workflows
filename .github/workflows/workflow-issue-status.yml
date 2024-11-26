@@ -48,6 +48,7 @@ jobs:
 
       - name: Extract issue number
         run: |
+          ISSUE_NUMBER = ""
           if [ "${{ github.event_name }}" == "issues" ] && [ "${{ github.event.action }}" == "opened" ]; then
             ISSUE_NUMBER="${{ github.event.issue.number }}"
           elif [ "${{ github.event_name }}" == "pull_request" ]; then
