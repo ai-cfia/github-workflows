@@ -11,5 +11,5 @@ jobs:
       - uses: dguo/check-author-and-committer-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          committer-email-regex: '@gc\.ca$'
+          committer-email-regex: '@(?:[a-zA-Z0-9-]+\.)?gc\.ca$'
           custom-error-message: "Commits must be signed with an email address ending in .gc.ca. Please configure your email address correctly."
