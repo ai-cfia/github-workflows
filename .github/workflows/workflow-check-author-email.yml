@@ -12,4 +12,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           committer-email-regex: '@gc\.ca$'
-          custom-error-message: "Commits must be signed with an email address ending in .gc.ca. Please configure your email address correctly.."
+          custom-error-message: "Commits must be signed with an email address ending in .gc.ca. Please configure your email address correctly."
