@@ -1,6 +1,7 @@
 name: Verify Committer Email
 on:
   workflow_call:
+  push:
 
 jobs:
   check-commit-author:
