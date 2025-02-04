@@ -5,6 +5,7 @@ ai-cfia/nachet-backend_Nachet
 ai-cfia/nachet-frontend_Nachet
 ai-cfia/nachet-model_Nachet
 ai-cfia/howard_DevSecOps
+ai-cfia/howard-on-prem_DevSecOps
 ai-cfia/github-workflows_DevSecOps
 ai-cfia/devops_DevSecOps
 ai-cfia/finesse-backend_Finesse
