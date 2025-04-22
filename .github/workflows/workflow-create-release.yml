@@ -92,7 +92,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to the github container registry (GCR)
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        uses: docker/login-action@7ca345011ac4304463197fac0e56eab1bc7e6af0
         with:
           registry: ${{ inputs.registry }}
           username: ${{ github.actor }}
@@ -107,7 +107,7 @@ jobs:
 
       - name: Build and push to ghcr
         id: docker_build_push_and_tag
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true

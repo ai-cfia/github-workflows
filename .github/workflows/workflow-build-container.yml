@@ -17,7 +17,7 @@ jobs:
     steps:
       # Login to Google Artifact Registry (GAR)
       - name: Login to GAR
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ secrets.GCP_CLOUDRUN_REGION }}-docker.pkg.dev
           username: _json_key
@@ -41,7 +41,7 @@ jobs:
 
       # Build and push the Docker image with the specified tag
       - name: Build the Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
