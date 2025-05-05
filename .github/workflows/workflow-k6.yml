@@ -8,7 +8,7 @@ on:
         type: string
 
 jobs:
-  run-test:
+  k6-tests:
     runs-on: on-prem-gh-runners
     steps:
       - name: Checkout
