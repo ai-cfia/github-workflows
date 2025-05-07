@@ -1,0 +1,27 @@
+name: K6 load test
+
+on:
+  workflow_call:
+    inputs:
+      paths:
+        required: true
+        type: string
+
+jobs:
+  k6-tests:
+    runs-on: on-prem-gh-runners
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup K6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run local k6 test
+        uses: grafana/run-k6-action@v1
+        env:
+          K6_PROMETHEUS_RW_SERVER_URL: http://lgtm-distributed-mimir-nginx/api/v1/push
+        flags: -o experimental-prometheus-rw
+        with:
+          path: |
+            ${{ inputs.paths }}
