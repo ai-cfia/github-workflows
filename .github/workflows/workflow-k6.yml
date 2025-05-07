@@ -24,4 +24,4 @@ jobs:
         with:
           flags: -o experimental-prometheus-rw
           path: |
-            ${{ inputs.paths }}
+            ${{ inputs.path }}
