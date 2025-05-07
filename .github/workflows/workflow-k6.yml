@@ -3,7 +3,7 @@ name: K6 load test
 on:
   workflow_call:
     inputs:
-      paths:
+      path:
         required: true
         type: string
 
@@ -21,7 +21,7 @@ jobs:
         uses: grafana/run-k6-action@v1
         env:
           K6_PROMETHEUS_RW_SERVER_URL: http://lgtm-distributed-mimir-nginx/api/v1/push
-        flags: -o experimental-prometheus-rw
         with:
+          flags: -o experimental-prometheus-rw
           path: |
             ${{ inputs.paths }}
