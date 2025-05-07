@@ -21,6 +21,7 @@ jobs:
         uses: grafana/run-k6-action@v1
         env:
           K6_PROMETHEUS_RW_SERVER_URL: http://lgtm-distributed-mimir-nginx/api/v1/push
+          OPENWEBUI_API_KEY: ${{ secrets.OPENWEBUI_API_KEY }}
         with:
           flags: -o experimental-prometheus-rw
           path: |
