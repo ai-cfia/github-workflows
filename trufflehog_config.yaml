@@ -4,3 +4,8 @@ detectors:
       - ailab
     regex:
       ailab: 'ailab-.*'
+    verify:
+      - endpoint: http://0.0.0.0:8000/
+        unsafe: true
+        headers:
+          - "Authorization: trufflehog verif" # not a secret
