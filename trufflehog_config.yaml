@@ -1,6 +1,6 @@
 detectors:
-  - keywords:
-      - ailab-
-    name: ailab_detector
+  - name: ailab_detector
+    keywords:
+      - ailab
     regex:
-      - 'ailab-.*'
+      ailab: 'ailab-.*'
