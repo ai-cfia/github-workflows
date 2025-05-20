@@ -31,4 +31,6 @@ The workflow operates in two primary stages:
    - After the scan, any temporary patterns added to `git-secrets` are removed
    to clean up the configuration.
    - The `Trufflehog` tool performs a comprehensive scan to identify both
-   verified and unknown secrets, providing detailed results.
+   verified and unknown secrets, providing detailed results. The Trufflehog
+   configuration is created dynamically within the workflow to include a custom
+   regex for detecting secrets with the `ailab-` prefix.
