@@ -12,10 +12,6 @@ scanning tools to identify and report potential leaks.
 ## Workflow Details
 
 1. **Scanning and Reporting:**
-   - The `git-secrets` tool scans the entire repository to detect potential
-   secret leaks.
-   - After the scan, any temporary patterns added to `git-secrets` are removed
-   to clean up the configuration.
    - The `Trufflehog` tool performs a comprehensive scan to identify both
    verified and unknown secrets, providing detailed results. The Trufflehog
    configuration is created dynamically within the workflow to include a custom

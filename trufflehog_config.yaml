@@ -5,7 +5,7 @@ detectors:
     regex:
       ailab: 'ailab-.*'
     verify:
-      - endpoint: http://0.0.0.0:8000/
+      - endpoint: http://trufflehog-verif-server-svc.trufflehog.svc.cluster.local:8000/
         unsafe: true
         headers:
           - "Authorization: trufflehog verif" # not a secret
