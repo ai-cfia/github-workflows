@@ -3,7 +3,7 @@ detectors:
     keywords:
       - ailabsecret
     regex:
-      ailab: 'ailabsecret-.*'
+      secret: 'ailabsecret-.*'
     verify:
       - endpoint: http://trufflehog-verif-server-svc.trufflehog.svc.cluster.local:8000/
         unsafe: true
