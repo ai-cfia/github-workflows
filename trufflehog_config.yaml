@@ -1,0 +1,11 @@
+detectors:
+  - name: ailab_secret_detector
+    keywords:
+      - ailabsecret
+    regex:
+      secret: 'ailabsecret-.*'
+    verify:
+      - endpoint: http://trufflehog-verif-server-svc.trufflehog.svc.cluster.local:8000/
+        unsafe: true
+        headers:
+          - "Authorization: trufflehog verif" # not a secret
