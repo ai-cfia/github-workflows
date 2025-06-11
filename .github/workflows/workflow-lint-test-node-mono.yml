@@ -1,0 +1,52 @@
+---
+name: Reusable lint and test workflow for Node (React) projects
+
+on:
+    workflow_call:
+        inputs:
+            working-directory:
+                description: 'Working directory for the workflow'
+                required: false
+                type: string
+                default: '.'
+            node-version:
+                description: 'Node.js version to use'
+                required: false
+                type: string
+                default: '18.16.0'
+            npm-version:
+                description: 'NPM version to use'
+                required: false
+                type: string
+                default: '9.8.1'
+
+jobs:
+    lint-test:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ${{ inputs.working-directory }}
+        steps:
+            - uses: actions/checkout@v4
+            
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ inputs.node-version }}
+                  cache: 'npm'
+                  cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+            
+            - name: Install specific npm version
+              run: npm install -g npm@${{ inputs.npm-version }}
+            
+            - name: Install dependencies
+              run: npm ci
+            
+            - name: Run ESLint
+              run: npm run lint
+            
+            - name: Run Prettier check
+              run: npm run format:check
+            
+            - name: Run tests
+              run: npm test
