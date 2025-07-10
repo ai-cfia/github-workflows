@@ -1,0 +1,68 @@
+name: Reusable version bump check validation workflow for Python projects (monorepo)
+
+on:
+  workflow_call:
+    inputs:
+      pyproject-path:
+        required: false
+        type: string
+      package-name:
+        required: false
+        type: string
+      working-directory:
+        required: false
+        type: string
+        default: '.'
+
+jobs:
+  version-bump-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Parse new version
+        id: parse_new_version
+        run: |
+          file_path="${{ inputs.pyproject-path || 'pyproject.toml' }}"
+          if [[ "$file_path" == *.toml ]]; then
+            new_version=$(grep -Po '(?<=^version = ")[^"]*' "$file_path")
+          elif [[ "$file_path" == *.py ]]; then
+            new_version=$(grep -Po '(?<=version=")[^"]*' "$file_path")
+          else
+            echo "Unsupported file format for version parsing"
+            exit 1
+          fi
+          echo "new_version=$new_version" >> $GITHUB_ENV
+
+      - name: Get latest version
+        id: get_latest_version
+        run: |
+          package_name="${{ inputs.package-name }}"
+          if [ -z "$package_name" ]; then
+            latest_tag=$(git tag --list "v*" --sort=-creatordate | head -n 1)
+          else
+            latest_tag=$(git tag --list "v*-*${package_name}" --sort=-creatordate | head -n 1)
+          fi
+          latest_version=$(echo "$latest_tag" | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
+          echo "latest_version=$latest_version" >> $GITHUB_ENV
+
+      - name: Check version bump
+        run: |
+          if [ "${{ env.new_version }}" == "${{ env.latest_version }}" ]; then
+            echo "Version has not been bumped!"
+            exit 1
+          else
+            echo "Version has been bumped."
+          fi

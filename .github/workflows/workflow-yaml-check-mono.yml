@@ -1,0 +1,63 @@
+---
+name: Check Yaml conformance to AI Lab standards (monorepo)
+
+on:
+  workflow_call:
+    inputs:
+      config-file-path:
+        required: false
+        type: string
+      working-directory:
+        required: false
+        type: string
+        default: '.'
+  push:
+
+jobs:
+  yaml-lint-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: files
+        uses: lots0logs/gh-action-get-changed-files@2.2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ai-cfia/github-workflows
+          path: github-workflows
+          ref: main
+          sparse-checkout: |
+            .yamllint.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Determine yaml lint config file
+        id: lintconfig
+        run: |
+          if [ -z "${{ inputs.config-file-path }}" ]; then
+            echo "::set-output name=lint_config_path::github-workflows/.yamllint.yml"
+          else
+            echo "::set-output name=lint_config_path::${{ inputs.config-file-path }}"
+          fi
+
+      - name: Lint YAML files
+        run: |
+          files=$(echo '${{ steps.files.outputs.all }}' | jq -r '.[]')
+          for file in $files; do
+            if [[ -f "$file" && ( $file == *.yml || $file == *.yaml ) ]]; then
+              yamllint -c "${{ github.workspace }}/${{ steps.lintconfig.outputs.lint_config_path }}" "$file"
+            fi
+          done
+        shell: bash
