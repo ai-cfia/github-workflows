@@ -1,0 +1,56 @@
+name: Reusable test workflow for Python projects (monorepo)
+
+on:
+  workflow_call:
+    inputs:
+      skip-coverage:
+        required: false
+        type: string
+        default: "false"
+      working-directory:
+        required: false
+        type: string
+        default: "."
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: gh-runner
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client libraries
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.x"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then \
+            pip install -r requirements.txt; \
+          fi
+          pip install pytest pytest-cov # for coverage
+          pip install psycopg[binary]
+
+      - uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+
+      - name: Test with pytest
+        run: |
+          python -m pytest --tb=no
+
+      - name: Run tests with coverage (coverage must be at least 80% to pass)
+        if: inputs.skip-coverage != 'true'
+        run: |
+          python -m pytest --cov=. --cov-fail-under=80 --no-showlocals
