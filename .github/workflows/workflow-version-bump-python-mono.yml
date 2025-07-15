@@ -51,11 +51,23 @@ jobs:
         run: |
           package_name="${{ inputs.package-name }}"
           if [ -z "$package_name" ]; then
-            latest_tag=$(git tag --list "v*" --sort=-creatordate | head -n 1)
+            tags=$(git tag --list "v*" --sort=-creatordate | head -n 10)
           else
-            latest_tag=$(git tag --list "v*-*${package_name}" --sort=-creatordate | head -n 1)
+            tags=$(git tag --list "v*-*${package_name}" --sort=-creatordate | head -n 10)
           fi
-          latest_version=$(echo "$latest_tag" | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
+          
+          latest_version=""
+          for tag in $tags; do
+            version=$(echo "$tag" | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
+            if [ -n "$version" ]; then
+              latest_version="$version"
+              break
+            fi
+          done
+          
+          if [ -z "$latest_version" ]; then
+            latest_version="0.0.0"
+          fi
           echo "latest_version=$latest_version" >> $GITHUB_ENV
 
       - name: Check version bump
