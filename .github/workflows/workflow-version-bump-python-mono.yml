@@ -53,12 +53,12 @@ jobs:
           if [ -z "$package_name" ]; then
             tags=$(git tag --list "v*" --sort=-creatordate | head -n 10)
           else
-            tags=$(git tag --list "v*-*${package_name}" --sort=-creatordate | head -n 10)
+            tags=$(git tag --list "${package_name}-v*" --sort=-creatordate | head -n 10)
           fi
           
           latest_version=""
           for tag in $tags; do
-            version=$(echo "$tag" | grep -oP '(?<=v)[0-9]+\.[0-9]+\.[0-9]+')
+            version=$(echo "$tag" | grep -oP '(?<=-v)[0-9]+\.[0-9]+\.[0-9]+')
             if [ -n "$version" ]; then
               latest_version="$version"
               break
