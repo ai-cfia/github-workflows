@@ -12,7 +12,7 @@ jobs:
     runs-on: on-prem-gh-runners
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup K6
         uses: grafana/setup-k6-action@v1

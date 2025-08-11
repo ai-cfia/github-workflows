@@ -37,10 +37,10 @@ jobs:
           private-key: ${{ secrets.GH_WORKFLOW_APP_PEM }}
 
       - name: Checkout current repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout ai-cfia/github-workflows repo (for repo_project.txt file)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ai-cfia/github-workflows
           token: ${{ secrets.GITHUB_TOKEN }}
