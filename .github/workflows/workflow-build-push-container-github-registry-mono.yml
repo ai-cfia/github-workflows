@@ -14,6 +14,10 @@ on:
       tag:
         required: true
         type: string
+      release-version:
+        required: false
+        type: string
+        default: 'latest'
       registry:
         required: true
         type: string
@@ -70,7 +74,7 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
-      - name: Build and push (2 tags | commit number and branch name) (merged)
+      - name: Build and push (3 tags | commit sha, branch name, release version) (merged)
         id: docker_build_and_tag_merged
         if: github.event.pull_request.merged == true
         uses: docker/build-push-action@v6
@@ -81,6 +85,7 @@ jobs:
           tags: |
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.pull_request.base.ref }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.release-version }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
