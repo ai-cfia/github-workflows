@@ -1,0 +1,64 @@
+---
+name: Integration workflow (webtop template)
+
+on:
+  workflow_call:
+    inputs:
+      username:
+        required: true
+        type: string
+      email:
+        required: true
+        type: string
+
+jobs:
+  webtop-template:
+    runs-on: gh-runner
+    needs: build-push-image
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+
+      - name: Authenticate with vault
+        uses: hashicorp/vault-action@v2.8.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: token
+          token: ${{ secrets.VAULT_TOKEN }}
+
+      - name: Generate random password
+        id: generate_password
+        run: echo "PASSWORD=$(openssl rand -hex 16)" >> $GITHUB_ENV
+
+      - name: Generate and store secret in Vault
+        run: |
+          vault kv put secret/kv/webtop/{{ inputs.username }} \
+            PUID=${{ secrets.PUID }} \
+            PGID=${{ secrets.PGID }} \
+            TZ=America/Toronto \
+            TITLE=${{ inputs.username }} \
+            CUSTOM_USER=${{ inputs.username }} \
+            PASSWORD=${{ env.PASSWORD }}
+
+      - name: Install the webtop-template from github.com/ai-cfia/devops inside the user-site
+        run: >
+          python -m pip install --user \
+          git+https://$USER:$USER_TOKEN@github.com/ai-cfia/devops.git@26-as-a-devops-i-want-to-create-unit-tests-for-the-remove-previous-imagepy-script
+        env:
+          USER: ${{ secrets.USER }}
+          USER_TOKEN: ${{ secrets.USER_TOKEN }}
+
+      - name: Access user site-packages
+        run: |
+          USER_SITE=$(python -m site --user-site)
+          echo "Path to site-packages is $USER_SITE"
+          echo "USER_SITE=$USER_SITE" >> $GITHUB_ENV
+
+      - name: Render template and create a pull request to the howard repository
+        if: github.event.pull_request.merged == false
+        run: python $USER_SITE/webtop-template/main.py
+        env:
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USERNAME: ${{ inputs.username }}
