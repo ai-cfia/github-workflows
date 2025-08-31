@@ -70,7 +70,8 @@ jobs:
           tags: |
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ github.event.number || github.run_number }}
             ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.tag }}
-            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.clean_branch_name || 'latest' }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ steps.extract_branch_name.outputs.clean_branch_name }}
+            ${{ inputs.registry }}/${{ inputs.container-name }}:${{ inputs.release-version }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
