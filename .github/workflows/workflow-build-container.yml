@@ -24,7 +24,7 @@ jobs:
           password: ${{ secrets.AILAB_GAR_JSON_KEY }}
 
       # Checkout the current repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Setup Docker Buildx for advanced build features
       - name: Set up Docker Buildx
