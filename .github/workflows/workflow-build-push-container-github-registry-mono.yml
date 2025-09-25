@@ -119,7 +119,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.13
 
       - name: Install the remove-previous-image from github.com/ai-cfia/devops inside the user-site
         run: >
