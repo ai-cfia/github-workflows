@@ -137,6 +137,7 @@ jobs:
 
       - name: Delete the previous image (unmerged pull request)
         if: github.event.pull_request.merged == false
+        continue-on-error: true
         run: python $USER_SITE/remove-previous-image/remove_previous_image.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -148,6 +149,7 @@ jobs:
 
       - name: Delete the previous image (merged pull request)
         if: github.event.pull_request.merged == true
+        continue-on-error: true
         run: python $USER_SITE/remove-previous-image/remove_previous_image.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
