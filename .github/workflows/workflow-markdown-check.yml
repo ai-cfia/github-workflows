@@ -55,7 +55,7 @@ jobs:
           config-file: ${{ steps.linkconfig.outputs.link_config_path }}
 
       - name: Run markdown lint
-        uses: DavidAnson/markdownlint-cli2-action@v14
+        uses: DavidAnson/markdownlint-cli2-action@v20
         if: always()
         with:
           globs: '**/*.md'
