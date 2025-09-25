@@ -24,12 +24,12 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Checkout reusable workflows repository for default configs if needed
       - name: Checkout default configs
         if: inputs.md-link-config-file-path == '' || inputs.md-lint-config-file-path == ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ai-cfia/github-workflows
           path: github-workflows
