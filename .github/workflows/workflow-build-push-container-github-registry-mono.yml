@@ -82,10 +82,11 @@ jobs:
 
       - name: Recreate sbom.json from reusable-workflow output (if any)
         shell: bash
+        env:
+          SBOM: ${{ needs.backend-sbom.outputs.sbom || needs.frontend-sbom.outputs.sbom }}
         run: |
           set -euo pipefail
 
-          SBOM="${{ needs.backend-sbom.outputs.sbom || needs.frontend-sbom.outputs.sbom }}"
           if [ -z "$SBOM" ]; then
             echo "No SBOM output provided (working-directory was not ./backend or ./frontend). Skipping."
             exit 0
