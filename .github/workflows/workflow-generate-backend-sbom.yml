@@ -1,0 +1,77 @@
+name: Generate Backend SBOM (Python/uv)
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "Backend directory containing pyproject.toml"
+        required: false
+        type: string
+        default: "./backend"
+      cyclonedx-spec-version:
+        description: "CycloneDX spec version"
+        required: false
+        type: string
+        default: "1.6"
+    outputs:
+      sbom:
+        description: "Base64-encoded sbom.json"
+        value: ${{ jobs.generate.outputs.sbom }}
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    outputs:
+      sbom: ${{ steps.export.outputs.sbom }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate SBOM via Docker
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+          CDX_SV: ${{ inputs.cyclonedx-spec-version }}
+        run: |
+          set -euo pipefail
+
+          PROJECT_DIR="$(realpath "${WORKDIR}")"
+
+          docker run --rm \
+            -v "${PROJECT_DIR}:/app" \
+            -w /app \
+            ubuntu:24.04 sh -c "\
+              apt update && \
+              apt install -y curl git build-essential python3-dev \
+                libjpeg-dev zlib1g-dev libtiff-dev libfreetype6-dev \
+                liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev \
+                libxcb1-dev && \
+              curl -LsSf https://astral.sh/uv/install.sh | sh && \
+              /root/.local/bin/uv sync --group dev --group sbom && \
+              /root/.local/bin/uv lock && \
+              /root/.local/bin/uv run cyclonedx-py environment \
+                --output-reproducible -v --sv ${CDX_SV} \
+                --pyproject pyproject.toml \
+                -o sbom.json && \
+              echo '' >> sbom.json"
+
+          # Fix ownership if needed
+          if [ -d "${PROJECT_DIR}/.venv" ]; then
+            sudo chown -R "$(id -u):$(id -g)" "${PROJECT_DIR}/.venv"
+          fi
+
+          test -f "${PROJECT_DIR}/sbom.json"
+
+      - name: Export SBOM as base64
+        id: export
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          set -euo pipefail
+          SBOM_PATH="$(realpath "${WORKDIR}/sbom.json")"
+          echo "sbom=$(base64 -w 0 "${SBOM_PATH}")" >> "$GITHUB_OUTPUT"

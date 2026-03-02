@@ -1,0 +1,116 @@
+---
+
+name: Generate Frontend SBOM (Node/npm)
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "Frontend directory containing package.json (relative to repo root)"
+        required: false
+        type: string
+        default: "./frontend"
+      cyclonedx-spec-version:
+        description: "CycloneDX spec version"
+        required: false
+        type: string
+        default: "1.6"
+    outputs:
+      sbom:
+        description: "Base64-encoded sbom.json"
+        value: ${{ jobs.generate.outputs.sbom }}
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    outputs:
+      sbom: ${{ steps.export.outputs.sbom }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect Node/npm versions from package.json engines
+        id: versions
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="$(realpath "${WORKDIR}")"
+
+          if [ ! -d "$PROJECT_DIR" ]; then
+            echo "Error: Directory '$PROJECT_DIR' does not exist" >&2
+            exit 1
+          fi
+          if [ ! -f "$PROJECT_DIR/package.json" ]; then
+            echo "Error: package.json not found in '$PROJECT_DIR'" >&2
+            exit 1
+          fi
+
+          NODE_VERSION=$(grep -o '"node": "[^"]*"' "$PROJECT_DIR/package.json" | sed 's/"node": "//; s/"//; s/\^//; s/~//; s/>=//') || true
+          NPM_VERSION=$(grep -o '"npm": "[^"]*"' "$PROJECT_DIR/package.json" | sed 's/"npm": "//; s/"//; s/\^//; s/~//; s/>=//') || true
+
+          NODE_VERSION="${NODE_VERSION:-20}"
+          NPM_VERSION="${NPM_VERSION:-10}"
+
+          echo "Detected Node.js version: $NODE_VERSION"
+          echo "Detected npm version: $NPM_VERSION"
+
+          echo "node_version=$NODE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "npm_version=$NPM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Remove node_modules (clean install)
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="$(realpath "${WORKDIR}")"
+          sudo rm -rf "$PROJECT_DIR/node_modules"
+
+      - name: Generate SBOM via Docker (Ubuntu 24.04 + nvm + cyclonedx-npm)
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+          CDX_SV: ${{ inputs.cyclonedx-spec-version }}
+          NODE_VERSION: ${{ steps.versions.outputs.node_version }}
+          NPM_VERSION: ${{ steps.versions.outputs.npm_version }}
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="$(realpath "${WORKDIR}")"
+
+          docker run --rm \
+            -v "${PROJECT_DIR}:/app" \
+            -w /app \
+            ubuntu:24.04 sh -c "\
+              apt update && \
+              apt install -y curl git ca-certificates && \
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash && \
+              export NVM_DIR=\"\$HOME/.nvm\" && \
+              [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\" && \
+              nvm install ${NODE_VERSION} && \
+              nvm use ${NODE_VERSION} && \
+              npm install -g npm@${NPM_VERSION} && \
+              npm install && npm update && \
+              npx cyclonedx-npm package-lock.json --output-reproducible --package-lock-only -v --sv ${CDX_SV} -o sbom.json && \
+              echo '' >> sbom.json"
+
+          # Fix ownership to runner user to avoid permission issues
+          sudo chown -R "$(id -u):$(id -g)" "${PROJECT_DIR}"
+
+          test -f "${PROJECT_DIR}/sbom.json"
+          echo "SBOM generated: ${PROJECT_DIR}/sbom.json"
+
+      - name: Export SBOM as base64
+        id: export
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          set -euo pipefail
+          SBOM_PATH="$(realpath "${WORKDIR}/sbom.json")"
+          echo "sbom=$(base64 -w 0 "${SBOM_PATH}")" >> "$GITHUB_OUTPUT"
