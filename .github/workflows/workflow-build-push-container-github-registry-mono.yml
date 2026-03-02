@@ -133,11 +133,15 @@ jobs:
 
       - name: Image digest (unmerged)
         if: github.event.pull_request.merged == false
-        run: echo "${{ steps.docker_build_and_tag_unmerged.outputs.digest }}"
+        env:
+          IMAGE_DIGEST: ${{ steps.docker_build_and_tag_unmerged.outputs.digest }}
+        run: echo "$IMAGE_DIGEST"
 
       - name: Image digest (merged)
         if: github.event.pull_request.merged == true
-        run: echo "${{ steps.docker_build_and_tag_merged.outputs.digest }}"
+        env:
+          IMAGE_DIGEST: ${{ steps.docker_build_and_tag_merged.outputs.digest }}
+        run: echo "$IMAGE_DIGEST"
 
       - name: Generate build summary
         run: |
