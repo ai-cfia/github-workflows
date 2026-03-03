@@ -1,3 +1,4 @@
+---
 name: Generate Backend SBOM (Python/uv)
 
 on:
