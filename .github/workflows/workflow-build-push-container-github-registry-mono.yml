@@ -24,6 +24,10 @@ on:
       dockerfile-folder-path:
         required: false
         type: string
+      runs-on:
+        required: false
+        type: string
+        default: "ubuntu-24.04"
 
 jobs:
   backend-sbom:
@@ -31,15 +35,17 @@ jobs:
     uses: ./.github/workflows/workflow-generate-backend-sbom.yml
     with:
       working-directory: ${{ inputs.working-directory }}
+      runs-on: ${ { inputs.runs-on } }
 
   frontend-sbom:
     if: inputs.working-directory == './frontend'
     uses: ./.github/workflows/workflow-generate-frontend-sbom.yml
     with:
       working-directory: ${{ inputs.working-directory }}
+      runs-on: ${{ inputs.runs-on }}
 
   build-push-image:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runs-on }}
     needs: [backend-sbom, frontend-sbom]
     # Important: allow running even if one of the needed jobs is skipped
     if: always()

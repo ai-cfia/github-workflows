@@ -3,6 +3,11 @@ name: Generate Backend SBOM (Python/uv)
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: "GitHub runner image"
+        required: false
+        type: string
+        default: "ubuntu-24.04"
       working-directory:
         description: "Backend directory containing pyproject.toml"
         required: false
@@ -23,7 +28,7 @@ permissions:
 
 jobs:
   generate:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runs-on }}
     outputs:
       sbom: ${{ steps.export.outputs.sbom }}
 
@@ -31,7 +36,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate SBOM via Docker
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt update
+          sudo apt install -y build-essential python3-dev \
+            libjpeg-dev zlib1g-dev libtiff-dev libfreetype6-dev \
+            liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev \
+            libxcb1-dev
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Generate SBOM
         shell: bash
         env:
           WORKDIR: ${{ inputs.working-directory }}
@@ -40,29 +58,17 @@ jobs:
           set -euo pipefail
 
           PROJECT_DIR="$(realpath "${WORKDIR}")"
+          test -f "${PROJECT_DIR}/pyproject.toml"
 
-          docker run --rm \
-            -v "${PROJECT_DIR}:/app" \
-            -w /app \
-            ubuntu:24.04 sh -c "\
-              apt update && \
-              apt install -y curl git build-essential python3-dev \
-                libjpeg-dev zlib1g-dev libtiff-dev libfreetype6-dev \
-                liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev \
-                libxcb1-dev && \
-              curl -LsSf https://astral.sh/uv/install.sh | sh && \
-              /root/.local/bin/uv sync --group dev --group sbom && \
-              /root/.local/bin/uv lock && \
-              /root/.local/bin/uv run cyclonedx-py environment \
-                --output-reproducible -v --sv ${CDX_SV} \
-                --pyproject pyproject.toml \
-                -o sbom.json && \
-              echo '' >> sbom.json"
+          cd "${PROJECT_DIR}"
 
-          # Fix ownership if needed
-          if [ -d "${PROJECT_DIR}/.venv" ]; then
-            sudo chown -R "$(id -u):$(id -g)" "${PROJECT_DIR}/.venv"
-          fi
+          uv sync --group dev --group sbom
+          uv lock
+          uv run cyclonedx-py environment \
+            --output-reproducible -v --sv "${CDX_SV}" \
+            --pyproject pyproject.toml \
+            -o sbom.json
+          echo '' >> sbom.json
 
           test -f "${PROJECT_DIR}/sbom.json"
 

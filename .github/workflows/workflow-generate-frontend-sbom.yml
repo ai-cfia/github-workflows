@@ -5,6 +5,11 @@ name: Generate Frontend SBOM (Node/npm)
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: "GitHub runner image"
+        required: false
+        type: string
+        default: "ubuntu-24.04"
       working-directory:
         description: "Frontend directory containing package.json (relative to repo root)"
         required: false
@@ -25,7 +30,7 @@ permissions:
 
 jobs:
   generate:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runs-on }}
     outputs:
       sbom: ${{ steps.export.outputs.sbom }}
 
@@ -72,7 +77,12 @@ jobs:
           PROJECT_DIR="$(realpath "${WORKDIR}")"
           sudo rm -rf "$PROJECT_DIR/node_modules"
 
-      - name: Generate SBOM via Docker (Ubuntu 24.04 + nvm + cyclonedx-npm)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.versions.outputs.node_version }}
+
+      - name: Generate SBOM
         shell: bash
         env:
           WORKDIR: ${{ inputs.working-directory }}
@@ -83,24 +93,16 @@ jobs:
           set -euo pipefail
           PROJECT_DIR="$(realpath "${WORKDIR}")"
 
-          docker run --rm \
-            -v "${PROJECT_DIR}:/app" \
-            -w /app \
-            ubuntu:24.04 sh -c "\
-              apt update && \
-              apt install -y curl git ca-certificates && \
-              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash && \
-              export NVM_DIR=\"\$HOME/.nvm\" && \
-              [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\" && \
-              nvm install ${NODE_VERSION} && \
-              nvm use ${NODE_VERSION} && \
-              npm install -g npm@${NPM_VERSION} && \
-              npm install && npm update && \
-              npx cyclonedx-npm package-lock.json --output-reproducible --package-lock-only -v --sv ${CDX_SV} -o sbom.json && \
-              echo '' >> sbom.json"
-
-          # Fix ownership to runner user to avoid permission issues
-          sudo chown -R "$(id -u):$(id -g)" "${PROJECT_DIR}"
+          cd "${PROJECT_DIR}"
+          npm install -g "npm@${NPM_VERSION}"
+          npm install
+          npm update
+          npx cyclonedx-npm package-lock.json \
+            --output-reproducible \
+            --package-lock-only \
+            -v --sv "${CDX_SV}" \
+            -o sbom.json
+          echo '' >> sbom.json
 
           test -f "${PROJECT_DIR}/sbom.json"
           echo "SBOM generated: ${PROJECT_DIR}/sbom.json"
