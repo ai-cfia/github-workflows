@@ -1,0 +1,118 @@
+---
+
+name: Generate Frontend SBOM (Node/npm)
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "GitHub runner image"
+        required: false
+        type: string
+        default: "ubuntu-24.04"
+      working-directory:
+        description: "Frontend directory containing package.json (relative to repo root)"
+        required: false
+        type: string
+        default: "./frontend"
+      cyclonedx-spec-version:
+        description: "CycloneDX spec version"
+        required: false
+        type: string
+        default: "1.6"
+    outputs:
+      sbom:
+        description: "Base64-encoded sbom.json"
+        value: ${{ jobs.generate.outputs.sbom }}
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ${{ inputs.runs-on }}
+    outputs:
+      sbom: ${{ steps.export.outputs.sbom }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect Node/npm versions from package.json engines
+        id: versions
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="$(realpath "${WORKDIR}")"
+
+          if [ ! -d "$PROJECT_DIR" ]; then
+            echo "Error: Directory '$PROJECT_DIR' does not exist" >&2
+            exit 1
+          fi
+          if [ ! -f "$PROJECT_DIR/package.json" ]; then
+            echo "Error: package.json not found in '$PROJECT_DIR'" >&2
+            exit 1
+          fi
+
+          NODE_VERSION=$(grep -o '"node": "[^"]*"' "$PROJECT_DIR/package.json" | sed 's/"node": "//; s/"//; s/\^//; s/~//; s/>=//') || true
+          NPM_VERSION=$(grep -o '"npm": "[^"]*"' "$PROJECT_DIR/package.json" | sed 's/"npm": "//; s/"//; s/\^//; s/~//; s/>=//') || true
+
+          NODE_VERSION="${NODE_VERSION:-20}"
+          NPM_VERSION="${NPM_VERSION:-10}"
+
+          echo "Detected Node.js version: $NODE_VERSION"
+          echo "Detected npm version: $NPM_VERSION"
+
+          echo "node_version=$NODE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "npm_version=$NPM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Remove node_modules (clean install)
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="$(realpath "${WORKDIR}")"
+          sudo rm -rf "$PROJECT_DIR/node_modules"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.versions.outputs.node_version }}
+
+      - name: Generate SBOM
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+          CDX_SV: ${{ inputs.cyclonedx-spec-version }}
+          NODE_VERSION: ${{ steps.versions.outputs.node_version }}
+          NPM_VERSION: ${{ steps.versions.outputs.npm_version }}
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="$(realpath "${WORKDIR}")"
+
+          cd "${PROJECT_DIR}"
+          npm install -g "npm@${NPM_VERSION}"
+          npm install
+          npm update
+          npx cyclonedx-npm package-lock.json \
+            --output-reproducible \
+            --package-lock-only \
+            -v --sv "${CDX_SV}" \
+            -o sbom.json
+          echo '' >> sbom.json
+
+          test -f "${PROJECT_DIR}/sbom.json"
+          echo "SBOM generated: ${PROJECT_DIR}/sbom.json"
+
+      - name: Export SBOM as base64
+        id: export
+        shell: bash
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          set -euo pipefail
+          SBOM_PATH="$(realpath "${WORKDIR}/sbom.json")"
+          echo "sbom=$(base64 -w 0 "${SBOM_PATH}")" >> "$GITHUB_OUTPUT"
