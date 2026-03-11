@@ -1,0 +1,78 @@
+---
+name: sbom-security-scan
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "Directory containing the SBOM file"
+        required: false
+        type: string
+        default: "."
+  workflow_dispatch:
+    inputs:
+      working-directory:
+        description: "Directory containing the SBOM file"
+        required: false
+        type: string
+        default: "."
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Ensure SBOM exists (skip scan if missing)
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          if [ ! -f "${WORKDIR}/sbom.json" ]; then
+            echo "SBOM not present (likely failed validation job); skipping scan.";
+            echo "No SBOM file found" > sbom-scan-skip.log
+            exit 0
+          fi
+      - uses: anchore/scan-action@e286cbc3c2c32c6b8bb4180b424e5b101f59e051
+        name: SBOM Security Scan
+        id: scan
+        with:
+          sbom: ${{ inputs.working-directory }}/sbom.json
+          fail-build: false
+      - name: Check SBOM scan results
+        run: cat ${{ steps.scan.outputs.sarif }}
+      - name: Fix SARIF artifact locations
+        # Grype SBOM scans don't include file locations, which causes GitHub Code Scanning
+        # to reject the SARIF file. This adds the SBOM file as the artifact location.
+        # See: https://github.com/microsoft/sarif-sdk/issues/2770
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          jq --arg workdir "${WORKDIR}" '
+            .runs[].results[] |= (
+              if .locations == null or .locations == [] then
+                .locations = [{
+                  "physicalLocation": {
+                    "artifactLocation": {
+                      "uri": ($workdir + "/sbom.json"),
+                      "uriBaseId": "%SRCROOT%"
+                    },
+                    "region": {
+                      "startLine": 1,
+                      "startColumn": 1,
+                      "endLine": 1,
+                      "endColumn": 1
+                    }
+                  }
+                }]
+              else .
+              end
+            )
+          ' "${{ steps.scan.outputs.sarif }}" > sarif-fixed.json
+          mv sarif-fixed.json "${{ steps.scan.outputs.sarif }}"
+      - name: Upload SBOM scan results
+        uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+          category: sbom-security-scan
