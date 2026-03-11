@@ -23,6 +23,23 @@ on:
       sbom:
         description: "Base64-encoded sbom.json"
         value: ${{ jobs.generate.outputs.sbom }}
+  workflow_dispatch:
+    inputs:
+      runs-on:
+        description: "GitHub runner image"
+        required: false
+        type: string
+        default: "ubuntu-24.04"
+      working-directory:
+        description: "Backend directory containing pyproject.toml"
+        required: false
+        type: string
+        default: "./backend"
+      cyclonedx-spec-version:
+        description: "CycloneDX spec version"
+        required: false
+        type: string
+        default: "1.6"
 
 permissions:
   contents: read
@@ -82,3 +99,8 @@ jobs:
           set -euo pipefail
           SBOM_PATH="$(realpath "${WORKDIR}/sbom.json")"
           echo "sbom=$(base64 -w 0 "${SBOM_PATH}")" >> "$GITHUB_OUTPUT"
+
+      - name: Scan SBOM for vulnerabilities
+        uses: ./.github/workflows/workflow-sbom-security-scan.yml
+        with:
+          working-directory: ${{ inputs.working-directory }}
