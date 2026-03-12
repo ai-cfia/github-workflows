@@ -135,6 +135,6 @@ jobs:
           echo "sbom=$(base64 -w 0 "${SBOM_PATH}")" >> "$GITHUB_OUTPUT"
 
       - name: Scan SBOM for vulnerabilities
-        uses: ./.github/workflows/workflow-sbom-security-scan.yml
+        uses: ai-cfia/github-workflows/.github/workflows/workflow-sbom-security-scan.yml
         with:
           working-directory: ${{ inputs.working-directory }}
