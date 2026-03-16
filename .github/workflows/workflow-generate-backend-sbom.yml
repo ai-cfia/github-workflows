@@ -100,7 +100,8 @@ jobs:
           SBOM_PATH="$(realpath "${WORKDIR}/sbom.json")"
           echo "sbom=$(base64 -w 0 "${SBOM_PATH}")" >> "$GITHUB_OUTPUT"
 
-      - name: Scan SBOM for vulnerabilities
-        uses: ai-cfia/github-workflows/.github/workflows/workflow-sbom-security-scan.yml
-        with:
-          working-directory: ${{ inputs.working-directory }}
+  scan:
+    uses: ai-cfia/github-workflows/.github/workflows/workflow-sbom-security-scan.yml
+    needs: generate
+    with:
+      working-directory: ${{ inputs.working-directory }}
