@@ -1,13 +1,14 @@
+---
 name: Check Markdown conformance to AI Lab standards
 
 on:
   workflow_call:
     inputs:
       working-directory:
-          description: 'Working directory for the workflow'
-          required: false
-          type: string
-          default: '.'
+        description: "Working directory for the workflow"
+        required: false
+        type: string
+        default: "."
       md-link-config-file-path:
         required: false
         type: string
@@ -66,5 +67,5 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v14
         if: always()
         with:
-          globs: '**/*.md'
+          globs: "**/*.md"
           config: ${{ github.workspace }}/${{ steps.lintconfig.outputs.lint_config_path }}
