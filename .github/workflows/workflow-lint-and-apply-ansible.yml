@@ -1,3 +1,4 @@
+---
 name: Ansible Workflow
 
 on:
@@ -12,15 +13,15 @@ on:
       ansible-variable-file:
         required: false
         type: string
-        default: ''
+        default: ""
       ansible-inventory-file:
         required: false
         type: string
-        default: ''
+        default: ""
       python-version:
         required: false
         type: string
-        default: '3.9'
+        default: "3.9"
 
 jobs:
   ansible-lint-and-apply:
@@ -32,7 +33,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '${{ inputs.python-version }}'
+          python-version: "${{ inputs.python-version }}"
 
       - name: Install ansible and ansible-lint
         run: |

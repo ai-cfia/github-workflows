@@ -1,3 +1,4 @@
+---
 name: Reusable lint and test workflow for Python projects (monorepo)
 
 on:
