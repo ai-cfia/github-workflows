@@ -95,7 +95,7 @@ jobs:
           sudo rm -rf "$PROJECT_DIR/node_modules"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ steps.versions.outputs.node_version }}
 
