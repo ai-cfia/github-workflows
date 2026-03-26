@@ -61,11 +61,12 @@ jobs:
       - name: Validating links
         uses: tcort/github-action-markdown-link-check@v1
         with:
+          folder-path: ${{ inputs.working-directory || '.' }}
           config-file: ${{ steps.linkconfig.outputs.link_config_path }}
 
       - name: Run markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v22
         if: always()
         with:
-          globs: "**/*.md"
+          globs: "${{ inputs.working-directory || '.' }}/**/*.md"
           config: ${{ github.workspace }}/${{ steps.lintconfig.outputs.lint_config_path }}
