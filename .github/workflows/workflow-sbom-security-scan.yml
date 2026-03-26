@@ -52,35 +52,22 @@ jobs:
           # Remove leading "./" to produce a clean relative path
           SBOM_URI="${SBOM_URI#./}"
           jq --arg uri "${SBOM_URI}" '
-            def default_location:
-              {
-                "physicalLocation": {
-                  "artifactLocation": {
-                    "uri": $uri,
-                    "uriBaseId": "%SRCROOT%"
-                  },
-                  "region": {
-                    "startLine": 1,
-                    "startColumn": 1,
-                    "endLine": 1,
-                    "endColumn": 1
-                  }
-                }
-              };
+            def default_loc:
+              {"uri": $uri, "uriBaseId": "%SRCROOT%"};
             .runs[] |= (
               .results //= [] |
-              .results[] |= (
+              .results = [.results[] | (
                 if .locations == null or .locations == [] then
-                  .locations = [default_location]
+                  .locations = [{"physicalLocation": {"artifactLocation": default_loc, "region": {"startLine": 1, "startColumn": 1, "endLine": 1, "endColumn": 1}}}]
                 else
-                  .locations[] |= (
-                    if .physicalLocation.artifactLocation == null then
-                      .physicalLocation.artifactLocation = {"uri": $uri, "uriBaseId": "%SRCROOT%"}
+                  .locations = [.locations[] | (
+                    if (.physicalLocation.artifactLocation.uri // "") == "" then
+                      .physicalLocation.artifactLocation = default_loc
                     else .
                     end
-                  )
+                  )]
                 end
-              )
+              )]
             )
           ' "${{ steps.scan.outputs.sarif }}" > sarif-fixed.json
           mv sarif-fixed.json "${{ steps.scan.outputs.sarif }}"
