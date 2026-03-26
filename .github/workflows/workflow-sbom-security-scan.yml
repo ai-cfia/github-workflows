@@ -48,25 +48,39 @@ jobs:
         env:
           WORKDIR: ${{ inputs.working-directory }}
         run: |
-          jq --arg workdir "${WORKDIR}" '
-            .runs[].results[] |= (
-              if .locations == null or .locations == [] then
-                .locations = [{
-                  "physicalLocation": {
-                    "artifactLocation": {
-                      "uri": ($workdir + "/sbom.json"),
-                      "uriBaseId": "%SRCROOT%"
-                    },
-                    "region": {
-                      "startLine": 1,
-                      "startColumn": 1,
-                      "endLine": 1,
-                      "endColumn": 1
-                    }
+          SBOM_URI="${WORKDIR}/sbom.json"
+          # Remove leading "./" to produce a clean relative path
+          SBOM_URI="${SBOM_URI#./}"
+          jq --arg uri "${SBOM_URI}" '
+            def default_location:
+              {
+                "physicalLocation": {
+                  "artifactLocation": {
+                    "uri": $uri,
+                    "uriBaseId": "%SRCROOT%"
+                  },
+                  "region": {
+                    "startLine": 1,
+                    "startColumn": 1,
+                    "endLine": 1,
+                    "endColumn": 1
                   }
-                }]
-              else .
-              end
+                }
+              };
+            .runs[] |= (
+              .results //= [] |
+              .results[] |= (
+                if .locations == null or .locations == [] then
+                  .locations = [default_location]
+                else
+                  .locations[] |= (
+                    if .physicalLocation.artifactLocation == null then
+                      .physicalLocation.artifactLocation = {"uri": $uri, "uriBaseId": "%SRCROOT%"}
+                    else .
+                    end
+                  )
+                end
+              )
             )
           ' "${{ steps.scan.outputs.sarif }}" > sarif-fixed.json
           mv sarif-fixed.json "${{ steps.scan.outputs.sarif }}"
