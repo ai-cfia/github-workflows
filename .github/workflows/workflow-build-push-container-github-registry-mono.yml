@@ -87,20 +87,21 @@ jobs:
           echo "clean_branch_name=$CLEAN_BRANCH_NAME" >> "$GITHUB_ENV"
           echo "clean_branch_name=$CLEAN_BRANCH_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Recreate sbom.json from reusable-workflow output (if any)
+      - name: Download SBOM artifact (if any)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: "*-sbom"
+          merge-multiple: true
+
+      - name: Check SBOM
         shell: bash
-        env:
-          SBOM: ${{ needs.backend-sbom.outputs.sbom || needs.frontend-sbom.outputs.sbom }}
         run: |
-          set -euo pipefail
-
-          if [ -z "$SBOM" ]; then
-            echo "No SBOM output provided (working-directory was not ./backend or ./frontend). Skipping."
-            exit 0
+          if [ -f sbom.json ]; then
+            echo "Found sbom.json ($(wc -c < sbom.json) bytes)"
+          else
+            echo "No SBOM artifact found. Skipping."
           fi
-
-          echo "$SBOM" | base64 -d > sbom.json
-          echo "Wrote sbom.json ($(wc -c < sbom.json) bytes)"
 
       - name: Build and push (3 tags | commit number, pr number and branch name) (unmerged)
         id: docker_build_and_tag_unmerged

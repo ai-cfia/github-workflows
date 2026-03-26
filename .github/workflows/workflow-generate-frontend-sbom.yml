@@ -20,10 +20,6 @@ on:
         required: false
         type: string
         default: "1.6"
-    outputs:
-      sbom:
-        description: "Base64-encoded sbom.json"
-        value: ${{ jobs.generate.outputs.sbom }}
   workflow_dispatch:
     inputs:
       runs-on:
@@ -48,9 +44,6 @@ permissions:
 jobs:
   generate:
     runs-on: ${{ inputs.runs-on }}
-    outputs:
-      sbom: ${{ steps.export.outputs.sbom }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -124,15 +117,12 @@ jobs:
           test -f "${PROJECT_DIR}/sbom.json"
           echo "SBOM generated: ${PROJECT_DIR}/sbom.json"
 
-      - name: Export SBOM as base64
-        id: export
-        shell: bash
-        env:
-          WORKDIR: ${{ inputs.working-directory }}
-        run: |
-          set -euo pipefail
-          SBOM_PATH="$(realpath "${WORKDIR}/sbom.json")"
-          echo "sbom=$(base64 -w 0 "${SBOM_PATH}")" >> "$GITHUB_OUTPUT"
+      - name: Upload SBOM as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-sbom
+          path: ${{ inputs.working-directory }}/sbom.json
+          retention-days: 1
 
       - uses: anchore/scan-action@e286cbc3c2c32c6b8bb4180b424e5b101f59e051
         name: SBOM Security Scan
