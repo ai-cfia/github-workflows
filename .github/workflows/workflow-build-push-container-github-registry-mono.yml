@@ -88,7 +88,7 @@ jobs:
           echo "clean_branch_name=$CLEAN_BRANCH_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Download SBOM artifact (if any)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           pattern: "*-sbom"
