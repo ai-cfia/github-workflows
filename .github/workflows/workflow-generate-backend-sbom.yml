@@ -58,7 +58,7 @@ jobs:
             libxcb1-dev
 
       - name: Install uv
-        uses: astral-sh/setup-uv@d7fe1a5a186096cccdd5fa2252d223b54fa53a72
+        uses: astral-sh/setup-uv@1c15d185f03657a1644ed2684496fb7c6ed59815
 
       - name: Generate SBOM
         shell: bash
