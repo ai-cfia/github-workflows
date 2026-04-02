@@ -90,7 +90,7 @@ jobs:
           path: ${{ inputs.working-directory }}/sbom.json
           retention-days: 1
 
-      - uses: anchore/scan-action@169928c7487a75f3bf714d50d8052584b778068d
+      - uses: anchore/scan-action@522bcc5cc7e62e4ce7cbe30f22372b991b432751
         name: SBOM Security Scan
         id: scan
         with:
