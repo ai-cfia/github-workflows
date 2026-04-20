@@ -30,15 +30,16 @@ on:
         default: "ubuntu-24.04"
 
 jobs:
+  # TODO: these need to be fixed so they reference node or python instead of backend or frontend, and also need to be made more flexible to support different paths for the sbom generation
   backend-sbom:
-    if: inputs.working-directory == './backend'
+    if: contains(inputs.working-directory, 'backend')
     uses: ai-cfia/github-workflows/.github/workflows/workflow-generate-backend-sbom.yml@main
     with:
       working-directory: ${{ inputs.working-directory }}
       runs-on: ${ { inputs.runs-on } }
 
   frontend-sbom:
-    if: inputs.working-directory == './frontend'
+    if: contains(inputs.working-directory, 'frontend')
     uses: ai-cfia/github-workflows/.github/workflows/workflow-generate-frontend-sbom.yml@main
     with:
       working-directory: ${{ inputs.working-directory }}
