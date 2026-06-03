@@ -36,7 +36,7 @@ jobs:
     uses: ai-cfia/github-workflows/.github/workflows/workflow-generate-backend-sbom.yml@main
     with:
       working-directory: ${{ inputs.working-directory }}
-      runs-on: ${ { inputs.runs-on } }
+      runs-on: ${{ inputs.runs-on }}
 
   frontend-sbom:
     if: contains(inputs.working-directory, 'frontend')
