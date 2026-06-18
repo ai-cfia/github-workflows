@@ -16,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Checkout reusable workflows repository for default configs if needed
       - name: Checkout default configs
         if: inputs.md-link-config-file-path == '' || inputs.md-lint-config-file-path == ''
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ai-cfia/github-workflows
           path: github-workflows
