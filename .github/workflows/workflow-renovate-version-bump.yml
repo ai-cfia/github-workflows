@@ -1,0 +1,175 @@
+name: Renovate Version Bump
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+        default: "."
+      package-name:
+        required: true
+        type: string
+
+jobs:
+  # Failure of either version check job indicates that the version has not been bumped
+  versions-frontend:
+    if: ${{ github.event.pull_request.user.login == 'renovate[bot]' && contains(inputs.working-directory, 'frontend') }}
+    uses: cfia/github-workflows/.github/workflows/workflow-frontend-versions.yml@main
+    with:
+      working-directory: ${{ inputs.working-directory }}
+      package-name: ${{ inputs.package-name }}
+      skip-version-check: true
+
+  versions-backend:
+    if: ${{ github.event.pull_request.user.login == 'renovate[bot]' && contains(inputs.working-directory, 'backend') }}
+    uses: ai-cfia/github-workflows/.github/workflows/workflow-version-bump-python-mono.yml@main
+    secrets: inherit
+    with:
+      pyproject-path: ${{ inputs.working-directory }}/pyproject.toml
+      package-name: ${{ inputs.package-name }}
+      working-directory: ${{ inputs.working-directory }}
+
+  bump-frontend-version:
+    name: Bump frontend version
+    needs: [versions-frontend]
+    if: ${{ !cancelled() && needs.versions-frontend.result == 'failure' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ needs.versions-frontend.outputs.node-version }}
+          cache: "npm"
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: Install specific npm version
+        run: npm install -g npm@${{ needs.versions-frontend.outputs.npm-version }}
+
+      - name: Idempotently bump version
+        env:
+          WORKDIR: ${{ inputs.working-directory }}
+        run: |
+          latest_version=""
+          tags=$(git tag --list "$WORKDIR -v*" --sort=-creatordate | head -n 10)
+
+          for tag in $tags; do
+            version=$(echo "$tag" | grep -oP "(?<=$WORKDIR -v)[0-9]+\.[0-9]+\.[0-9]+")
+            if [ -n "$version" ]; then
+              latest_version="$version"
+              break
+            fi
+          done
+
+          if [ -z "$latest_version" ]; then
+            latest_version="0.0.0"
+          fi
+
+          current_version=$(jq -r '.version' package.json)
+          desired_version=$(echo "$latest_version" | awk -F. -v OFS=. '{ $NF++; print }')
+
+          compare_versions() {
+            local version1=$1
+            local version2=$2
+
+            IFS='.' read -ra V1 <<< "$version1"
+            IFS='.' read -ra V2 <<< "$version2"
+
+            for i in {0..2}; do
+              v1_part=${V1[i]:-0}
+              v2_part=${V2[i]:-0}
+
+              if [ "$v1_part" -gt "$v2_part" ]; then
+                return 0
+              elif [ "$v1_part" -lt "$v2_part" ]; then
+                return 1
+              fi
+            done
+
+            return 1
+          }
+
+          echo "Latest released version: $latest_version"
+          echo "Current PR version: $current_version"
+          echo "Desired PR version: $desired_version"
+
+          if compare_versions "$current_version" "$latest_version"; then
+            echo "Version is already bumped."
+          else
+            npm version "$desired_version" --no-git-tag-version
+          fi
+
+      - name: Update lock file
+        run: |
+          npm install --package-lock-only
+          npm audit fix --package-lock-only || true
+
+      - name: Commit & push changes
+        uses: EndBug/add-and-commit@ebe9b51bb11d033d228e1a1c3f23ad5bd4110c81
+        with:
+          message: "chore: bump frontend version for Renovate PRs"
+          add: "."
+          pull: "--rebase --autostash"
+          author_name: "github-actions[bot]"
+          author_email: "github-actions[bot]@users.noreply.github.com"
+
+  bump-backend-version:
+    name: Bump backend version
+    needs: [versions-backend]
+    if: ${{ !cancelled() && needs.versions-backend.result == 'failure' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@5c62c5926145985eec91f09e2e0a75f40daed929
+        with:
+          version: "latest"
+
+      - name: Bump version for Renovate PRs
+        run: |
+          uv version --bump patch
+
+      - name: Update lock file for Renovate PRs
+        run: uv lock
+
+      - name: Commit & push changes
+        uses: EndBug/add-and-commit@ebe9b51bb11d033d228e1a1c3f23ad5bd4110c81
+        with:
+          message: "chore: bump backend version for Renovate PRs"
+          add: "."
+          pull: "--rebase --autostash"
+          author_name: "github-actions[bot]"
+          author_email: "github-actions[bot]@users.noreply.github.com"
