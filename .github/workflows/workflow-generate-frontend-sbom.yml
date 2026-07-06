@@ -110,6 +110,7 @@ jobs:
           npx @cyclonedx/cyclonedx-npm package-lock.json \
             --output-reproducible \
             --package-lock-only \
+            --omit dev \
             -v --sv "${CDX_SV}" \
             -o sbom.json
           echo '' >> sbom.json
