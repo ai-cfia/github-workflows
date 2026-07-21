@@ -19,7 +19,7 @@ jobs:
           path: github-workflows
 
       - name: Labelling pull request
-        uses: actions/labeler@v6
+        uses: actions/labeler@v7
         with:
           configuration-path: 'github-workflows/labeler.yml'
           sync-labels: true
