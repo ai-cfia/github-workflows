@@ -162,7 +162,7 @@ jobs:
           echo "- **SHA:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
   remove-old-image:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: build-push-image
     steps:
       - name: Set up Python
