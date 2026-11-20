@@ -14,9 +14,20 @@ on:
         required: false
         type: string
         default: "."
+      projects-root:
+        description: Repository-relative directory to check against the PR base.
+        required: false
+        type: string
+        default: ""
+      shared-project-directories:
+        description: Newline-separated directories whose shared files affect their descendant projects.
+        required: false
+        type: string
+        default: ""
 
 jobs:
   version-bump-check:
+    if: ${{ inputs.projects-root == '' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -79,3 +90,107 @@ jobs:
           else
             echo "Version has been bumped."
           fi
+
+  pr-version-bump-check:
+    if: ${{ inputs.projects-root != '' }}
+    name: Compare project versions with the PR base
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install version parser
+        run: python -m pip install semver==3.0.4
+
+      - name: Require a greater version for every changed project
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PROJECTS_ROOT: ${{ inputs.projects-root }}
+          SHARED_PROJECT_DIRECTORIES: ${{ inputs.shared-project-directories }}
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          import tomllib
+          from pathlib import PurePosixPath
+
+          from semver import Version
+
+          base = os.environ["PR_BASE_SHA"]
+          if not base:
+              raise SystemExit("projects-root mode requires a pull_request event.")
+
+          root = PurePosixPath(os.environ["PROJECTS_ROOT"])
+          shared_directories = {
+              PurePosixPath(line.strip())
+              for line in os.environ["SHARED_PROJECT_DIRECTORIES"].splitlines()
+              if line.strip()
+          }
+
+          def git(*args):
+              return subprocess.check_output(["git", *args])
+
+          def paths(output):
+              return {PurePosixPath(os.fsdecode(path)) for path in output.split(b"\0") if path}
+
+          def project_files(revision):
+              tracked = paths(git("ls-tree", "-r", "--name-only", "-z", revision, "--", str(root)))
+              return {path for path in tracked if path.name == "pyproject.toml"}
+
+          def version(revision, project):
+              try:
+                  document = tomllib.loads(git("show", f"{revision}:{project}").decode())
+                  return Version.parse(document["project"]["version"])
+              except (KeyError, TypeError, ValueError) as error:
+                  raise ValueError(
+                      f"{str(project)!r} at {revision} needs a valid SemVer [project].version"
+                  ) from error
+
+          previous_projects = project_files(base)
+          current_projects = project_files("HEAD")
+          by_directory = {project.parent: project for project in current_projects}
+          changed = paths(git("diff", "--name-only", "--no-renames", "-z", base, "HEAD", "--", str(root)))
+
+          affected = set()
+          for path in changed:
+              for directory in path.parents:
+                  if directory in by_directory:
+                      affected.add(by_directory[directory])
+                      break
+                  if directory in shared_directories:
+                      affected.update(
+                          project for project in current_projects if directory in project.parents
+                      )
+                      break
+
+          failed = False
+          for project in sorted(affected):
+              try:
+                  current = version("HEAD", project)
+                  if project in previous_projects:
+                      previous = version(base, project)
+                      if current <= previous:
+                          raise ValueError(
+                              f"{str(project)!r} [project].version must increase "
+                              f"from {previous} (found {current})."
+                          )
+              except ValueError as error:
+                  print(error)
+                  failed = True
+              else:
+                  print(f"{str(project)!r} [project].version {current} passed.")
+
+          if not affected:
+              print("No Python projects changed.")
+          raise SystemExit(int(failed))
+          PY
